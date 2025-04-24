@@ -1,0 +1,6 @@
+name: JBCreditShop
+version: '1.0-SNAPSHOT'
+main: org.example.jBCreditShop.Main
+api-version: '1.19'
+authors: [ Mortality/MortalDev ]
+description: Plugin used to create credit shops.
