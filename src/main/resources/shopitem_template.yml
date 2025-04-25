@@ -1,0 +1,53 @@
+'1':
+  item_id: "example_item"
+  shop_id: "example_shop" # The shop this item is associated with. If empty, this will not be displayed anywhere.
+  display_material: "name_tag" # Set to "" or dont include for default. Uses minecraft material.
+  display_name: "&6&lHello &fWorld"
+  description: #Optional, gives more detail to the item
+    - "&7This item is to show off"
+    - "&7how to use the shopitem config."
+  shop_slot: 0 # Only works with 'custom' styled shops. Lets you specify the shop slot this item will go into.
+  group: "example" # Optional but must have consistent name to with others to work.
+  permission: "permission.example" # Optional but will work with "owned/unowned" filter for players.
+  purchased_item: "" # Does not get set in config, ONLY IN GAME. Leave blank or dont include in config. Gives this item when purchased. (if they have space, otherwise cancels)
+  purchased_command: "/give %player% minecraft:diamond_axe" # Runs this command when purchased
+  purchased_permission: "player.fly" # Gives this permission when purchased. If they have this, they cannot buy it again.
+  price: 12000 # Set to -1 for shop default
+  locked: true # If true will disallow purchasing, optional locked_reason.
+  locked_reason: "&cCannot be purchased. Only available during the &eEaster &fEvent&c." # Displayed to players as the reason.
+  visible: true # Must have a purchased_item, purchased_command or purchased_permission to allow 'true'. Otherwise defaults to false.
+  archived: false # If true, overrides visible flag to 'false' and puts into "archived" menu.
+'2':
+  item_id: "peeps"
+  shop_id: "color_me"
+  display_material: "GOLD_INGOT"
+  display_name: "&#F8FFB5&lP&#F0FF5B&le&#E7FF00&le&#F0FF5B&lp&#F8FFB5&ls"
+  description:
+    - "&7This item is part of our &e&lEaster Set&7."
+    - "&7Earned only with &eEaster &fEggs&7!"
+  group: "Easter"
+  permission: "colorme.peeps"
+  purchased_item: "<assume this is the peeps voucher item stack>"
+  price: -1
+  locked: true
+  locked_reason: "&cCannot be purchased. Only available during the &eEaster &fEvent&c."
+  visible: true
+  archived: false
+'3':
+  item_id: "log_rank"
+  shop_id: "creditshop"
+  display_material: "OAK_LOG"
+  display_name: "&7Log Rank - &6&lPRISONS"
+  description:
+    - "&eLog&7 Rank on all Prisons servers"
+    - "&7Yellow &eLOG&7 tag in chat, above your head and on the tab-list."
+    - "&fWhite &7colored username on the tab-list."
+    - "&7ect, ect. you get it..."
+  shop_slot: 0
+  permission: "group.log"
+  purchased_permission: "group.log"
+  price: 12000
+  locked: false
+  locked_reason: "&cCannot be purchased. Only available during the &eEaster &fEvent&c."
+  visible: true
+  archived: false
