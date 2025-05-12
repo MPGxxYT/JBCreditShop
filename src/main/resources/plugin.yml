@@ -1,8 +1,9 @@
 name: JBCreditShop
 version: '1.0-SNAPSHOT'
-main: org.example.jbcreditshop.Main
+main: me.mortaldev.jbcreditshop.Main
 api-version: '1.19'
 authors: [ Mortality/MortalDev ]
 description: Plugin used to create credit shops.
 depend:
   - EcoBits
+  - LuckPerms

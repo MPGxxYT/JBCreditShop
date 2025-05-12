@@ -1,0 +1,412 @@
+package me.mortaldev.jbcreditshop.menus;
+
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import me.mortaldev.jbcreditshop.modules.playerdata.PlayerData;
+import me.mortaldev.jbcreditshop.modules.playerdata.PlayerDataManager;
+import me.mortaldev.menuapi.GUIManager;
+import me.mortaldev.menuapi.InventoryButton;
+import me.mortaldev.menuapi.InventoryGUI;
+import net.wesjd.anvilgui.AnvilGUI;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import me.mortaldev.jbcreditshop.Main;
+import me.mortaldev.jbcreditshop.modules.MenuData;
+import me.mortaldev.jbcreditshop.modules.Shop;
+import me.mortaldev.jbcreditshop.modules.ShopItem;
+import me.mortaldev.jbcreditshop.modules.ShopItemsManager;
+import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
+import me.mortaldev.jbcreditshop.utils.TextUtil;
+import me.mortaldev.jbcreditshop.utils.Utils;
+
+public class AutoStyleMenu extends InventoryGUI {
+
+  private final Shop shop;
+  private final Set<ShopItem> shopItems;
+  private final boolean adminMode;
+  private final MenuData menuData;
+
+  public AutoStyleMenu(Shop shop, boolean adminMode, MenuData menuData) {
+    this.adminMode = adminMode;
+    this.shop = shop;
+    this.shopItems = ShopItemsManager.getInstance().getByShopID(shop.getShopID(), false);
+    this.menuData = menuData;
+  }
+
+  @Override
+  protected Inventory createInventory() {
+    return Bukkit.createInventory(null, getSize() * 9, TextUtil.format(shop.getShopDisplay()));
+  }
+
+  private int getMaxPage() {
+    return (int) Math.ceil(shopItems.size() / 45.0);
+  }
+
+  private int getSize() { // Paginated
+    int maxPage = getMaxPage();
+    if (menuData.getPage() >= maxPage) {
+      int mod = (maxPage - 1) * 45;
+      int size = shopItems.size();
+      if (mod > 0) {
+        size = size % mod;
+      }
+      return Utils.clamp((int) Math.ceil(size / 9.0), 2, 6);
+    }
+    return 6;
+  }
+
+  private Set<ShopItem> applyFilterAndSearch(Set<ShopItem> shopItems, Player player) {
+    Set<ShopItem> result;
+    if (!menuData.getSearchQuery().isBlank()) {
+      result = new HashSet<>();
+      for (ShopItem item : shopItems) {
+        if (item.getItemID().toLowerCase().contains(menuData.getSearchQuery().toLowerCase())) {
+          result.add(item);
+        } else if (!item.getDisplayName().isBlank()) {
+          String displayName = item.getDisplayName();
+          displayName = TextUtil.removeColors(displayName);
+          displayName = TextUtil.removeDecoration(displayName);
+          if (displayName.toLowerCase().contains(menuData.getSearchQuery().toLowerCase())) {
+            result.add(item);
+          }
+        }
+      }
+    } else {
+      result = new HashSet<>(shopItems);
+    }
+    Set<ShopItem> remove = new HashSet<>();
+    switch (menuData.getFilter()) {
+      case NONE -> {
+        return result;
+      }
+      case OWNED -> { // Show only owned items
+        for (ShopItem item : result) {
+          if (!item.getPurchasedPermission().isBlank()) {
+            if (!player.hasPermission(item.getPurchasedPermission())) {
+              remove.add(item);
+              continue;
+            }
+          }
+          if (!item.getPermission().isBlank()) {
+            if (!player.hasPermission(item.getPermission())) {
+              remove.add(item);
+              continue;
+            }
+          }
+          PlayerData playerData =
+              PlayerDataManager.getInstance()
+                  .getByID(player.getUniqueId().toString())
+                  .orElse(PlayerData.create(player.getUniqueId().toString()));
+          if (!playerData.hasPurchasedItem(item)) {
+            remove.add(item);
+          }
+        }
+      }
+      case UNLOCKED -> {
+        for (ShopItem item : result) {
+          if (item.isLocked()) {
+            remove.add(item);
+          }
+        }
+      }
+      case UNOWNED -> { // Show only unowned items
+        for (ShopItem item : result) {
+          if (!item.getPurchasedPermission().isBlank()) {
+            if (player.hasPermission(item.getPurchasedPermission())) {
+              remove.add(item);
+              continue;
+            }
+          }
+          if (!item.getPermission().isBlank()) {
+            if (player.hasPermission(item.getPermission())) {
+              remove.add(item);
+              continue;
+            }
+          }
+          PlayerData playerData =
+              PlayerDataManager.getInstance()
+                  .getByID(player.getUniqueId().toString())
+                  .orElse(PlayerData.create(player.getUniqueId().toString()));
+          if (playerData.hasPurchasedItem(item)) {
+            remove.add(item);
+          }
+        }
+      }
+    }
+    result.removeAll(remove);
+    remove.clear();
+    return result;
+  }
+
+  private LinkedHashSet<ShopItem> applyOrderAndDirection(Set<ShopItem> shopItems) {
+    LinkedHashSet<ShopItem> result = new LinkedHashSet<>(shopItems);
+    switch (menuData.getOrderBy()) {
+      case NAME -> {
+          result =
+              result.stream()
+                  .sorted(Comparator.comparing(ShopItem::getPlainDisplayName))
+                  .collect(Collectors.toCollection(LinkedHashSet::new));
+      }
+      case GROUP -> {
+        LinkedHashSet<ShopItem> hasGroup = new LinkedHashSet<>();
+        LinkedHashSet<ShopItem> doesntHaveGroup = new LinkedHashSet<>();
+        result.forEach(
+            item -> {
+              if (!item.getGroup().isBlank()) {
+                hasGroup.add(item);
+              } else {
+                doesntHaveGroup.add(item);
+              }
+            });
+        result =
+            hasGroup.stream()
+                .sorted(Comparator.comparing(ShopItem::getGroup))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        result.addAll(doesntHaveGroup);
+      }
+      case PRICE -> {
+        result =
+            result.stream()
+                .sorted(Comparator.comparingDouble(ShopItem::getPrice))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+      }
+    }
+    switch (menuData.getDirection()) {
+      case ASCENDING -> {
+        return result;
+      }
+      case DESCENDING -> {
+        List<ShopItem> reversedList = new ArrayList<>(result);
+        Collections.reverse(reversedList);
+        result = new LinkedHashSet<>(reversedList);
+        return result;
+      }
+    }
+    return result;
+  }
+
+  private LinkedHashSet<ShopItem> applyPage(LinkedHashSet<ShopItem> shopItems) {
+    int page = menuData.getPage();
+    if (page > getMaxPage()) {
+      page = getMaxPage();
+    }
+    return shopItems.stream()
+        .skip((page - 1) * 45L)
+        .limit(45)
+        .collect(Collectors.toCollection(LinkedHashSet::new));
+  }
+
+  @Override
+  public void decorate(Player player) {
+    Set<ShopItem> filterAndSearch = applyFilterAndSearch(shopItems, player);
+    LinkedHashSet<ShopItem> orderAndDirection = applyOrderAndDirection(filterAndSearch);
+    LinkedHashSet<ShopItem> pageAdjusted = applyPage(orderAndDirection);
+    int slot = 0;
+    for (ShopItem shopItem : pageAdjusted) {
+      if (slot == 45) {
+        break;
+      }
+      if (!shopItem.canBeDisplayed()) {
+        if (!adminMode) {
+          continue;
+        }
+      }
+      addButton(slot + 9, ShopItemButton(shopItem));
+      slot++;
+    }
+    ItemStack glass =
+        ItemStackHelper.builder(Material.WHITE_STAINED_GLASS_PANE).emptyName().build();
+    for (int i = 0; i < 9; i++) {
+      getInventory().setItem(i, glass);
+    }
+    if (menuData.getPage() > 1) {
+      addButton(0, BackButton());
+    }
+    if (menuData.getPage() < getMaxPage()) {
+      addButton(8, NextButton());
+    }
+    addButton(3, SearchButton());
+    addButton(4, FilterButton());
+    addButton(5, OrderButton());
+    super.decorate(player);
+  }
+
+  private InventoryButton OrderButton() {
+    ItemStackHelper.Builder builder =
+        ItemStackHelper.builder(Material.BOOK)
+            .name("&3&lOrder")
+            .addLore("&7Change the order in which the items are displayed.")
+            .addLore("")
+            .addLore("&7NAME")
+            .addLore("&7GROUP")
+            .addLore("&7PRICE")
+            .addLore("")
+            .addLore("&7ASCENDING")
+            .addLore("&7DESCENDING")
+            .addLore("")
+            .addLore("&7 ( left-click to change order)")
+            .addLore("&7 ( right-click to change direction)");
+    switch (menuData.getDirection()) {
+      case ASCENDING -> builder.setLore(6, " &f&lASCENDING");
+      case DESCENDING -> builder.setLore(7, " &f&lDESCENDING");
+    }
+    switch (menuData.getOrderBy()) {
+      case NAME -> builder.setLore(2, " &f&lNAME");
+      case GROUP -> builder.setLore(3, " &f&lGROUP");
+      case PRICE -> builder.setLore(4, " &f&lPRICE");
+    }
+    return new InventoryButton()
+        .creator(player -> builder.build())
+        .consumer(
+            event -> {
+              Player player = (Player) event.getWhoClicked();
+              if (event.isRightClick()) {
+                menuData.setDirection(MenuData.Direction.getNext(menuData.getDirection()));
+              } else {
+                menuData.setOrderBy(MenuData.OrderBy.getNext(menuData.getOrderBy()));
+              }
+              GUIManager.getInstance()
+                  .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
+            });
+  }
+
+  private InventoryButton FilterButton() {
+    ItemStackHelper.Builder builder =
+        ItemStackHelper.builder(Material.NAME_TAG)
+            .name("&3&lFilter")
+            .addLore("&7Will filter out the selected item.")
+            .addLore("")
+            .addLore("&7NONE")
+            .addLore("&7UNLOCKED")
+            .addLore("&7OWNED")
+            .addLore("&7UNOWNED")
+            .addLore("")
+            .addLore("&7 ( click to change )");
+    switch (menuData.getFilter()) {
+      case NONE -> builder.setLore(2, " &f&lNONE");
+      case UNLOCKED -> builder.setLore(3, " &f&lUNLOCKED");
+      case OWNED -> builder.setLore(4, " &f&lOWNED");
+      case UNOWNED -> builder.setLore(5, " &f&lUNOWNED");
+    }
+    return new InventoryButton()
+        .creator(player -> builder.build())
+        .consumer(
+            event -> {
+              Player player = (Player) event.getWhoClicked();
+              MenuData.Filter filter = menuData.getFilter();
+              menuData.setFilter(filter.getNext(filter));
+              GUIManager.getInstance()
+                  .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
+            });
+  }
+
+  private InventoryButton BackButton() {
+    return new InventoryButton()
+        .creator(
+            player ->
+                ItemStackHelper.builder(Material.ARROW)
+                    .name("&7&lBack")
+                    .addLore("&7Click to return to previous page.")
+                    .build())
+        .consumer(
+            event -> {
+              Player player = (Player) event.getWhoClicked();
+              int page = menuData.getPage();
+              if (page > 1) {
+                menuData.setPage(page - 1);
+              }
+              GUIManager.getInstance()
+                  .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
+            });
+  }
+
+  private InventoryButton NextButton() {
+    return new InventoryButton()
+        .creator(
+            player ->
+                ItemStackHelper.builder(Material.ARROW)
+                    .name("&7&lBack")
+                    .addLore("&7Click to go to next page.")
+                    .build())
+        .consumer(
+            event -> {
+              Player player = (Player) event.getWhoClicked();
+              int page = menuData.getPage();
+              if (page < getMaxPage()) {
+                menuData.setPage(page + 1);
+              }
+              GUIManager.getInstance()
+                  .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
+            });
+  }
+
+  private InventoryButton SearchButton() {
+    ItemStackHelper.Builder builder =
+        ItemStackHelper.builder(Material.ANVIL)
+            .name("&3&lSearch")
+            .addLore("&7Enter a search query to find something specific.")
+            .addLore("");
+    if (!menuData.getSearchQuery().isBlank()) {
+      builder
+          .addLore("&7Query: &f" + menuData.getSearchQuery())
+          .addLore("")
+          .addLore("&7 ( click to clear )");
+    } else {
+      builder.addLore("&7Query: &fNone").addLore("").addLore("&7 ( click to search )");
+    }
+    return new InventoryButton()
+        .creator(player -> builder.build())
+        .consumer(
+            event -> {
+              Player player = (Player) event.getWhoClicked();
+              if (!menuData.getSearchQuery().isBlank()) {
+                menuData.setSearchQuery("");
+                GUIManager.getInstance()
+                    .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
+                return;
+              }
+              if (event.isLeftClick()) {
+                new AnvilGUI.Builder()
+                    .plugin(Main.getInstance())
+                    .title("Search")
+                    .itemLeft(ItemStackHelper.builder(Material.PAPER).name(" ").build())
+                    .onClick(
+                        (slot, stateSnapshot) -> {
+                          if (slot == 2) {
+                            String textEntry = stateSnapshot.getText();
+                            textEntry = textEntry.trim();
+                            menuData.setSearchQuery(textEntry);
+                            GUIManager.getInstance()
+                                .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
+                          }
+                          return Collections.emptyList();
+                        })
+                    .open(player);
+              } else if (event.isRightClick()) {
+                menuData.setSearchQuery("");
+                GUIManager.getInstance()
+                    .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
+              }
+            });
+  }
+
+  private InventoryButton ShopItemButton(ShopItem shopItem) {
+    return new InventoryButton()
+        .creator(
+            player -> ShopItemsManager.getInstance().getShopMenuStack(shopItem, adminMode, player))
+        .consumer(
+            event -> {
+              Player player = (Player) event.getWhoClicked();
+              if (ShopItemsManager.getInstance().canAllowPurchase(shopItem, player)) {
+                ShopItemsManager.getInstance().purchaseShopItem(shopItem, player);
+              }
+              GUIManager.getInstance()
+                  .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
+            });
+  }
+}

@@ -12,7 +12,10 @@
   purchased_item: "" # Does not get set in config, ONLY IN GAME. Leave blank or dont include in config. Gives this item when purchased. (if they have space, otherwise cancels)
   purchased_command: "/give %player% minecraft:diamond_axe" # Runs this command when purchased
   purchased_permission: "player.fly" # Gives this permission when purchased. If they have this, they cannot buy it again.
+  one_time_purchase: false # Becomes true if purchased_command is being used.
   price: 12000 # Set to -1 for shop default
+  discount: 0 # Percent discount to this item. (0-100)
+  allow_discount_stacking: true # If true, allows stacking shop discount on top of item discount. [Item First, Shop Second]
   locked: true # If true will disallow purchasing, optional locked_reason.
   locked_reason: "&cCannot be purchased. Only available during the &eEaster &fEvent&c." # Displayed to players as the reason.
   visible: true # Must have a purchased_item, purchased_command or purchased_permission to allow 'true'. Otherwise defaults to false.

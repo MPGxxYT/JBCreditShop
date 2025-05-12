@@ -6,7 +6,7 @@
   locked: false # Set true if you dont want regular players to access. optional locked_bypass_permission
   locked_bypass_permission: "colorme_shop.bypass"
   discount: 0 # Percent discount to all items in store or the applied group. (0-100)
-  discount_group: "Easter" # Group that gets the discount
+  discount_group: "Easter" # Group that gets the discount, leave blank for no group.
   style: "custom" # 'auto' will have the plugin's default menu with sorting and all.
   # set to 'custom' to allow you to customize the menu
   size: 3 # Can only be used with 'custom'. Allows you to choose the gui rows. (Cannot be less than 1 or greater than 6)
