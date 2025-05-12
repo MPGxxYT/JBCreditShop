@@ -1,10 +1,17 @@
 package me.mortaldev.jbcreditshop.modules;
 
+import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.records.Pair;
+import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Shop {
   private Pair<FileConfiguration, String> source;
@@ -20,6 +27,7 @@ public class Shop {
   private String discountGroup;
   private Style style = Style.AUTO;
   private int size;
+  private HashMap<Integer, String> filler;
 
   public Pair<FileConfiguration, String> getSource() {
     return source;
@@ -82,6 +90,31 @@ public class Shop {
 
   public int getSize() {
     return size;
+  }
+
+  public HashMap<Integer, ItemStack> getFiller() {
+    return filler.entrySet().stream()
+        .map(
+            entry -> {
+              ItemStack deserializedItem = ItemStackHelper.deserialize(entry.getValue());
+              return Map.entry(entry.getKey(), deserializedItem);
+            })
+        .collect(
+            Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v2, HashMap::new));
+  }
+
+  public void addFiller(int slot, ItemStack item) {
+    if (filler == null) {
+      filler = new HashMap<>();
+    }
+    filler.put(slot, ItemStackHelper.serialize(item));
+  }
+
+  public void removeFiller(int slot) {
+    if (filler == null) {
+      return;
+    }
+    filler.remove(slot);
   }
 
   public static Builder builder() {
@@ -180,6 +213,11 @@ public class Shop {
 
     public Builder setSize(int size) {
       shop.size = size;
+      return this;
+    }
+
+    public Builder setFiller(HashMap<Integer, String> filler) {
+      shop.filler = filler;
       return this;
     }
   }

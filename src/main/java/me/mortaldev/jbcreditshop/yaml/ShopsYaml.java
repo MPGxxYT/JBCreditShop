@@ -169,6 +169,10 @@ public class ShopsYaml {
         if (key.equals("style") && shop.getStyle() != null) {
           section.set(key, shop.getStyle().name()); // Stores the enum by its string name
         }
+      } else if (clazz == Map.class) {
+        if (key.equals("filler")) {
+          section.set(key, shop.getFiller());
+        }
       } else { // Default handling, primarily for String.class
         if (stringSuppliers.containsKey(key) && stringSuppliers.get(key).get() != null) {
           // Avoids setting a key if both key and value are blank, which can be ambiguous.
@@ -225,11 +229,13 @@ public class ShopsYaml {
             put("discount_group", String.class);
             put("style", Enum.class); // Assumes Shop.Style is an Enum
             put("size", Integer.class);
+            put("filler", Map.class);
           }
         };
     if (shop.getStyle()
         != Shop.Style.CUSTOM) { // Ensures Shop.Style.CUSTOM is the correct enum constant
       hashMap.remove("size");
+      hashMap.remove("filler");
     }
     return hashMap;
   }
@@ -342,6 +348,21 @@ public class ShopsYaml {
     return builder;
   }
 
+  private Shop.Builder getFiller(ConfigurationSection config, Shop.Builder builder) {
+    HashMap<Integer, String> loadedMap = new HashMap<>();
+    ConfigurationSection section = config.getConfigurationSection("filler");
+    if (section == null) {
+      return builder;
+    }
+    for (String keyString : section.getKeys(false)) {
+      int intKey = Integer.parseInt(keyString);
+      String value = section.getString(keyString);
+      loadedMap.put(intKey, value);
+    }
+    builder.setFiller(loadedMap);
+    return builder;
+  }
+
   private Shop toShop(ConfigurationSection config) {
     Shop.Builder builder = Shop.builder();
     // The order of these calls might matter if there are interdependencies in how Shop objects are
@@ -349,6 +370,7 @@ public class ShopsYaml {
     getSingleStringValues(config, builder);
     getBooleanValues(config, builder);
     getDigitValues(config, builder);
+    getFiller(config, builder);
     return builder.build();
   }
 }
