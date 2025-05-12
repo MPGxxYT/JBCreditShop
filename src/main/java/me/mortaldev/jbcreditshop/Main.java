@@ -4,6 +4,7 @@ import co.aikar.commands.PaperCommandManager;
 import com.google.common.collect.ImmutableList;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -71,9 +72,13 @@ public final class Main extends JavaPlugin {
     Bukkit.getLogger().warning("[" + Main.getLabel() + "] " + message);
   }
 
+  public static void error(String message) {
+    Bukkit.getLogger().warning("[" + Main.getLabel() + "] " + message);
+  }
+
   // Timezone adjusted local date
-  public static LocalDate getLocalDate() {
-    return ZonedDateTime.now(ZoneId.of("America/New_York")).toLocalDate();
+  public static LocalDateTime getLocalDateTime() {
+    return ZonedDateTime.now(ZoneId.of("America/New_York")).toLocalDateTime();
   }
 
   @Override
@@ -102,8 +107,12 @@ public final class Main extends JavaPlugin {
     // CONFIGS
 
     // Managers (Loading data)
+
+    //  - YAML BASED
     ShopManager.getInstance().loadShops();
     ShopItemsManager.getInstance().loadShopItems();
+
+    //  - CRUD BASED
     PlayerDataManager.getInstance().load();
     ShopStatsCRUD.getInstance().load();
     TransactionLogManager.getInstance().load();

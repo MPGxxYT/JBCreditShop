@@ -3,6 +3,7 @@ package me.mortaldev.jbcreditshop.modules.transaction;
 import me.mortaldev.crudapi.CRUD;
 import me.mortaldev.crudapi.CRUDManager;
 import me.mortaldev.jbcreditshop.Main;
+import me.mortaldev.jbcreditshop.modules.transaction.data.Transaction;
 
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -29,6 +30,12 @@ public class TransactionLogManager extends CRUDManager<TransactionLog> {
   }
 
   public TransactionLog getTodayLog() {
-    return getByID(Main.getLocalDate().format(DateTimeFormatter.ISO_LOCAL_DATE)).orElse(new TransactionLog(Main.getLocalDate(), new HashMap<>()));
+    return getByID(Main.getLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE)).orElse(new TransactionLog(Main.getLocalDateTime(), new HashMap<>()));
+  }
+
+  public void addTransaction(Transaction transaction) {
+    TransactionLog todayLog = getTodayLog();
+    todayLog.addTransaction(transaction);
+    update(todayLog, true);
   }
 }

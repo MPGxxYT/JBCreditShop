@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import me.mortaldev.jbcreditshop.modules.shopstats.ShopStatsCRUD;
+import me.mortaldev.jbcreditshop.modules.transaction.TransactionLog;
 import me.mortaldev.jbcreditshop.modules.transaction.TransactionLogManager;
 import me.mortaldev.jbcreditshop.modules.transaction.data.Transaction;
 import net.luckperms.api.LuckPerms;
@@ -188,8 +189,10 @@ public class ShopItemsManager {
       user.data().add(Node.builder(shopItem.getPurchasedPermission()).build());
       luckPerms.getUserManager().saveUser(user);
     }
+    // Transaction Logging
     Transaction transaction = new Transaction(player.getUniqueId().toString(), shopItem.getItemID(), shopItem.getPrice());
-    TransactionLogManager.getInstance().getTodayLog().addTransaction(transaction);
+    TransactionLogManager.getInstance().addTransaction(transaction);
+    // **************************
     ShopStatsCRUD.getInstance().get().addPurchase(shopItem.getItemID());
     playerData.addPurchasedItem(shopItem, 1);
     PlayerDataManager.getInstance().update(playerData);

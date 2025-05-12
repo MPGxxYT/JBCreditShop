@@ -42,9 +42,21 @@ public class ShopManager {
     return Optional.empty();
   }
 
-  public void addShop(Shop shop) {
+  public boolean addShop(Shop shop) {
+    for (Shop entry : shops) {
+      if (entry.getShopID().equals(shop.getShopID())) {
+        return false;
+      }
+    }
+    ShopsYaml.getInstance().create(shop);
     shops.add(shop);
-    ShopsYaml.getInstance().add(shop);
+    return true;
+  }
+
+  public void updateShop(Shop shop) {
+    shops.removeIf(entry -> entry.getShopID().equals(shop.getShopID()));
+    ShopsYaml.getInstance().save(shop);
+    shops.add(shop);
   }
 
   public void openShop(Shop shop, Player player, boolean adminMode) {

@@ -1,18 +1,22 @@
 package me.mortaldev.jbcreditshop.menus;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.MenuData;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.menuapi.GUIManager;
 import me.mortaldev.menuapi.InventoryButton;
 import me.mortaldev.menuapi.InventoryGUI;
+import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.modules.ShopManager;
@@ -36,6 +40,9 @@ public class ShopsMenu extends InventoryGUI {
   }
 
   private int getMaxPage() {
+    if (shops.isEmpty()) {
+      return 1;
+    }
     return (int) Math.ceil(shops.size() / 45.0);
   }
 
@@ -53,6 +60,9 @@ public class ShopsMenu extends InventoryGUI {
   }
 
   private Set<Shop> applySearch(Set<Shop> shops) {
+    if (shops.isEmpty()) {
+      return new HashSet<>();
+    }
     String search = menuData.getSearchQuery();
     if (search == null || search.isEmpty()) {
       return shops;
@@ -100,7 +110,111 @@ public class ShopsMenu extends InventoryGUI {
       }
       slot++;
     }
+    addButton(4, SearchButton());
+    addButton(5, CreateShopButton());
     super.decorate(player);
+  }
+
+  private InventoryButton CreateShopButton() {
+    return new InventoryButton()
+        .creator(
+            player ->
+                ItemStackHelper.builder(Material.LIME_DYE)
+                    .name("&2&lCreate Shop")
+                    .addLore("&7Creates a new shop to manage.")
+                    .addLore()
+                    .addLore("&7&o[Shop locked by default]")
+                    .addLore()
+                    .addLore("&7 ( click to create )")
+                    .build())
+        .consumer(
+            event -> {
+              Player player = (Player) event.getWhoClicked();
+              new AnvilGUI.Builder()
+                  .plugin(Main.getInstance())
+                  .title("Create Shop")
+                  .itemLeft(ItemStackHelper.builder(Material.PAPER).name("id").build())
+                  .onClick(
+                      (slot, stateSnapshot) -> {
+                        if (slot == 2) {
+                          String textEntry = stateSnapshot.getText();
+                          textEntry = textEntry.trim();
+                          if (textEntry.isBlank()) {
+                            player.sendMessage(
+                                "&cMust enter an id for the shop.");
+                            Main.playDenySound(player);
+                            GUIManager.getInstance()
+                                .openGUI(new ShopsMenu(menuData), player);
+                            return Collections.emptyList();
+                          }
+                          Shop shop = Shop.builder().setShopID(textEntry)
+                              .setShopDisplay("&7" + textEntry)
+                              .setDefaultDisplayMaterial(Material.GOLD_INGOT)
+                              .setLocked(true)
+                              .build();
+                          ShopManager shopManager = ShopManager.getInstance();
+                          if (!shopManager.addShop(shop)) {
+                            player.sendMessage(
+                                "&cShop with ID " + textEntry + " already exists.");
+                            Main.playDenySound(player);
+                            GUIManager.getInstance()
+                                .openGUI(new ShopsMenu(menuData), player);
+                            return Collections.emptyList();
+                          }
+                          shopManager.openShop(shop, player, true);
+                        }
+                        return Collections.emptyList();
+                      })
+                  .open(player);
+            });
+  }
+
+  private InventoryButton SearchButton() {
+    ItemStackHelper.Builder builder =
+        ItemStackHelper.builder(Material.ANVIL)
+            .name("&3&lSearch")
+            .addLore("&7Enter a search query to find something specific.")
+            .addLore("");
+    if (!menuData.getSearchQuery().isBlank()) {
+      builder
+          .addLore("&7Query: &f" + menuData.getSearchQuery())
+          .addLore("")
+          .addLore("&7 ( click to clear )");
+    } else {
+      builder.addLore("&7Query: &fNone").addLore("").addLore("&7 ( click to search )");
+    }
+    return new InventoryButton()
+        .creator(player -> builder.build())
+        .consumer(
+            event -> {
+              Player player = (Player) event.getWhoClicked();
+              if (!menuData.getSearchQuery().isBlank()) {
+                menuData.setSearchQuery("");
+                GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
+                return;
+              }
+              if (event.isLeftClick()) {
+                new AnvilGUI.Builder()
+                    .plugin(Main.getInstance())
+                    .title("Search")
+                    .itemLeft(ItemStackHelper.builder(Material.PAPER).name(" ").build())
+                    .onClick(
+                        (slot, stateSnapshot) -> {
+                          if (slot == 2) {
+                            String textEntry = stateSnapshot.getText();
+                            textEntry = textEntry.trim();
+                            menuData.setSearchQuery(textEntry);
+                            GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
+                          }
+                          return Collections.emptyList();
+                        })
+                    .open(player);
+              } else if (event.isRightClick()) {
+                menuData.setSearchQuery("");
+                GUIManager.getInstance()
+                    .openGUI(new ShopsMenu(menuData), player);
+              }
+            });
   }
 
   private InventoryButton ShopButton(Shop shop) {
@@ -109,6 +223,10 @@ public class ShopsMenu extends InventoryGUI {
         .consumer(
             event -> {
               Player player = (Player) event.getWhoClicked();
+              if (event.getClick() == ClickType.RIGHT) {
+                ShopManager.getInstance().openShop(shop, player, true);
+                return;
+              }
               ShopManager.getInstance().openShop(shop, player, false);
             });
   }

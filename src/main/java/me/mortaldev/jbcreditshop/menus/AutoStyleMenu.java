@@ -44,6 +44,9 @@ public class AutoStyleMenu extends InventoryGUI {
   }
 
   private int getMaxPage() {
+    if (shopItems.isEmpty()) {
+      return 1;
+    }
     return (int) Math.ceil(shopItems.size() / 45.0);
   }
 
@@ -61,6 +64,9 @@ public class AutoStyleMenu extends InventoryGUI {
   }
 
   private Set<ShopItem> applyFilterAndSearch(Set<ShopItem> shopItems, Player player) {
+    if (shopItems.isEmpty()) {
+      return new LinkedHashSet<>();
+    }
     Set<ShopItem> result;
     if (!menuData.getSearchQuery().isBlank()) {
       result = new HashSet<>();
@@ -144,6 +150,9 @@ public class AutoStyleMenu extends InventoryGUI {
   }
 
   private LinkedHashSet<ShopItem> applyOrderAndDirection(Set<ShopItem> shopItems) {
+    if (shopItems.isEmpty()) {
+      return new LinkedHashSet<>();
+    }
     LinkedHashSet<ShopItem> result = new LinkedHashSet<>(shopItems);
     switch (menuData.getOrderBy()) {
       case NAME -> {
@@ -233,6 +242,9 @@ public class AutoStyleMenu extends InventoryGUI {
     addButton(3, SearchButton());
     addButton(4, FilterButton());
     addButton(5, OrderButton());
+    if (adminMode) {
+
+    }
     super.decorate(player);
   }
 

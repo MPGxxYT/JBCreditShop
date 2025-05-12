@@ -1,25 +1,28 @@
 package me.mortaldev.jbcreditshop.modules.transaction;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import me.mortaldev.crudapi.CRUD;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.transaction.data.Transaction;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 
-public class TransactionLog implements CRUD.Identifiable {
-
-  private final LocalDate date;
-  private final HashMap<String, Transaction> transactions; // <timestamp, transaction>
+/**
+ * @param transactions <timestamp, transaction>
+ */
+public record TransactionLog(
+    @JsonProperty("date") LocalDateTime date, HashMap<String, Transaction> transactions)
+    implements CRUD.Identifiable {
 
   @JsonCreator
   public TransactionLog(
-      @JsonProperty("date") LocalDate date,
+      @JsonProperty("date") LocalDateTime date,
       @JsonProperty("transactions") HashMap<String, Transaction> transactions) {
-    this.date = date == null ? Main.getLocalDate() : date;
+    this.date = date == null ? Main.getLocalDateTime() : date;
     this.transactions = transactions == null ? new HashMap<>() : transactions;
   }
 
@@ -35,15 +38,18 @@ public class TransactionLog implements CRUD.Identifiable {
     transactions.entrySet().removeIf(entry -> entry.getValue().equals(transaction));
   }
 
-  public String getTimestamp() {
-    return Main.getLocalDate().format(DateTimeFormatter.ISO_LOCAL_TIME);
+  @Override
+  public LocalDateTime date() {
+    return date;
   }
 
-  public HashMap<String, Transaction> getTransactions() {
-    return transactions;
+  @JsonIgnore
+  public String getTimestamp() {
+    return Main.getLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_TIME);
   }
 
   @Override
+  @JsonIgnore
   public String getID() {
     return date.format(DateTimeFormatter.ISO_LOCAL_DATE);
   }

@@ -47,6 +47,7 @@ public class CreditShopCommand extends BaseCommand {
   }
 
   @CommandAlias("reload")
+  @CommandPermission("jbcreditshop.admin")
   public void reload(Player player) {
     ShopManager.getInstance().loadShops();
     ShopItemsManager.getInstance().loadShopItems();

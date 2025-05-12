@@ -8,8 +8,6 @@ import me.mortaldev.jbcreditshop.modules.shopstats.data.ShopItemStat;
 import me.mortaldev.jbcreditshop.modules.shopstats.data.StatsHolder;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -28,7 +26,7 @@ public record ShopStats(HashMap<LocalDate, StatsHolder> stats) {
   }
 
   public void addPurchase(String itemID) {
-    LocalDate localDate = Main.getLocalDate();
+    LocalDate localDate = Main.getLocalDateTime().toLocalDate();
     StatsHolder statsHolder;
     if (stats.containsKey(localDate)) {
       statsHolder = stats.get(localDate);

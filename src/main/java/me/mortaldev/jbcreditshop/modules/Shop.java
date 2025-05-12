@@ -12,7 +12,7 @@ public class Shop {
 
   private String shopID;
   private String shopDisplay;
-  private int defaultPrice;
+  private int defaultPrice = 12000;
   private Material defaultDisplayMaterial;
   private boolean locked = true;
   private String lockedBypassPermission;
@@ -170,6 +170,11 @@ public class Shop {
         return this;
       }
       shop.style = styleEnum;
+      return this;
+    }
+
+    public Builder setStyleAsEnum(Style style) {
+      shop.style = style;
       return this;
     }
 
