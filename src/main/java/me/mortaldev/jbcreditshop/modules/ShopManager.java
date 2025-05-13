@@ -13,7 +13,7 @@ import me.mortaldev.jbcreditshop.yaml.ShopsYaml;
 
 public class ShopManager {
 
-  Set<Shop> shops = new HashSet<>();
+  private Set<Shop> shops = new HashSet<>();
 
   private static class Singleton {
     private static final ShopManager INSTANCE = new ShopManager();
@@ -40,6 +40,11 @@ public class ShopManager {
       }
     }
     return Optional.empty();
+  }
+
+  public void deleteShop(Shop shop) {
+    shops.removeIf(entry -> entry.getShopID().equals(shop.getShopID()));
+    ShopsYaml.getInstance().delete(shop);
   }
 
   public boolean addShop(Shop shop) {
@@ -88,8 +93,11 @@ public class ShopManager {
     if (shop.getStyle() == Shop.Style.CUSTOM) {
       builder.addLore("&3&lSize: &f" + shop.getSize());
     }
-    builder.addLore("").addLore("&7 ( left-click to view shop )");
-    builder.addLore("").addLore("&7 ( right-click to edit )");
+    builder
+        .addLore("")
+        .addLore("&7( left-click to view shop )")
+        .addLore("&7( middle-click to edit settings )")
+        .addLore("&7( right-click to edit )");
     return builder.build();
   }
 }

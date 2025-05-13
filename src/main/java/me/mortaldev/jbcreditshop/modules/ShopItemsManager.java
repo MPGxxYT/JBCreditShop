@@ -44,9 +44,10 @@ public class ShopItemsManager {
 
   public ItemStack getShopMenuStack(ShopItem shopItem, boolean adminMode, Player player) {
     Material display = shopItem.getDisplayMaterial();
+    Shop shop = ShopManager.getInstance().getShop(shopItem.getShopID()).get();
     if (display == null || display.isAir()) {
       display =
-          ShopManager.getInstance().getShop(shopItem.getShopID()).get().getDefaultDisplayMaterial();
+          shop.getDefaultDisplayMaterial();
     }
     ItemStackHelper.Builder builder =
         ItemStackHelper.builder(display).name(shopItem.getDisplayName());
@@ -63,8 +64,9 @@ public class ShopItemsManager {
           .addLore("&3&lLocked: &f" + shopItem.isLocked())
           .addLore("&3&lVisible: &f" + shopItem.canBeDisplayed())
           .addLore("&3&lPrice: &f" + shopItem.getPrice())
+          .addLore("&3&lDiscount: &f" + shopItem.getDiscount() + "%")
           .addLore("")
-          .addLore("&7 ( click to modify )");
+          .addLore("&7( click to modify )");
     } else {
       String purchasedPermission = shopItem.getPurchasedPermission();
       if (!purchasedPermission.isBlank()) {
@@ -73,12 +75,69 @@ public class ShopItemsManager {
           return builder.build();
         }
       }
+      if (shopItem.getDiscount() > 0 || shop.getDiscount() > 0) {
+        int discountPrice = getDiscountPrice(shopItem, shop);
+        double discountPercent = getDiscountPercent(shopItem, shop);
+        builder
+            .addLore("&e&l SALE! &e&n" + discountPercent + "&l%&e off!")
+            .addLore()
+            .addLore("&3&lPrice: &7&m" + shopItem.getPrice() + "&r &e&l" + discountPrice);
+      } else {
+        builder
+            .addLore("&3&lPrice: &f" + shopItem.getPrice());
+      }
       builder
-          .addLore("&3&lPrice: &f" + shopItem.getPrice())
           .addLore("")
-          .addLore("&7 ( click to purchase )");
+          .addLore("&7( click to purchase )");
     }
     return builder.build();
+  }
+
+  public double getDiscountPercent(ShopItem shopItem, Shop shop) {
+    if (shopItem.getDiscount() > 0 || shop.getDiscount() > 0) {
+      if (shop.getDiscount() > 0) {
+        if (shop.getDiscountGroup().isBlank() || !shop.getDiscountGroup().isBlank() && shopItem.getGroup().equalsIgnoreCase(shop.getDiscountGroup())) {
+          double shopItemDiscountRate = shopItem.getDiscount() / 100.0;
+          double shopDiscountRate = shop.getDiscount() / 100.0;
+          if (shopItem.isAllowDiscountStacking()) {
+            double remainingPercentage = (1 - shopItemDiscountRate) * (1 - shopDiscountRate);
+            return Math.ceil((1 - remainingPercentage) * 100.0);
+          } else {
+            return Math.ceil(Math.max(shopItemDiscountRate, shopDiscountRate) * 100.0);
+          }
+        }
+      } else {
+        return shopItem.getDiscount();
+      }
+    }
+    return 0;
+  }
+
+  public int getDiscountPrice(ShopItem shopItem) {
+    Shop shop = ShopManager.getInstance().getShop(shopItem.getShopID()).get();
+    return getDiscountPrice(shopItem, shop);
+  }
+
+  public int getDiscountPrice(ShopItem shopItem, Shop shop) {
+    if (shopItem.getDiscount() > 0 || shop.getDiscount() > 0) {
+      int discountPrice = shopItem.getPrice();
+      if (shop.getDiscount() > 0) {
+        if (shop.getDiscountGroup().isBlank() || !shop.getDiscountGroup().isBlank() && shopItem.getGroup().equalsIgnoreCase(shop.getDiscountGroup())) {
+          if (shopItem.isAllowDiscountStacking()) {
+            discountPrice = (int) Math.ceil(discountPrice * (1 - shopItem.getDiscount() / 100.0));
+            discountPrice = (int) Math.ceil(discountPrice * (1 - shop.getDiscount() / 100.0));
+          } else {
+            int discountPrice1 = (int) Math.ceil(discountPrice * (1 - shopItem.getDiscount() / 100.0));
+            int discountPrice2 = (int) Math.ceil(discountPrice * (1 - shop.getDiscount() / 100.0));
+            discountPrice = Math.min(discountPrice1, discountPrice2);
+          }
+        }
+      } else {
+        discountPrice = (int) Math.ceil(discountPrice * (1 - shopItem.getDiscount() / 100.0));
+      }
+      return discountPrice;
+    }
+    return shopItem.getPrice();
   }
 
   public void loadShopItems() {
@@ -136,7 +195,7 @@ public class ShopItemsManager {
       }
     }
     BigDecimal currentBalance = new EcoBitsAccount(player).getCurrentBalance();
-    if (currentBalance.compareTo(BigDecimal.valueOf(shopItem.getPrice())) < 0) {
+    if (currentBalance.compareTo(BigDecimal.valueOf(getDiscountPrice(shopItem))) < 0) {
       player.sendMessage(
           TextUtil.format("&cYou cannot afford this. Not enough credits!"));
       Main.playDenySound(player);
@@ -189,14 +248,15 @@ public class ShopItemsManager {
       user.data().add(Node.builder(shopItem.getPurchasedPermission()).build());
       luckPerms.getUserManager().saveUser(user);
     }
+    int price = getDiscountPrice(shopItem);
     // Transaction Logging
-    Transaction transaction = new Transaction(player.getUniqueId().toString(), shopItem.getItemID(), shopItem.getPrice());
+    Transaction transaction = new Transaction(player.getUniqueId().toString(), shopItem.getItemID(), price);
     TransactionLogManager.getInstance().addTransaction(transaction);
     // **************************
     ShopStatsCRUD.getInstance().get().addPurchase(shopItem.getItemID());
     playerData.addPurchasedItem(shopItem, 1);
     PlayerDataManager.getInstance().update(playerData);
-    player.sendMessage(TextUtil.format("&3Purchased " + shopItem.getDisplayName() + " &3for &l" + shopItem.getPrice() + "&3 credits."));
-    new EcoBitsAccount(player).remove(BigDecimal.valueOf(shopItem.getPrice()));
+    player.sendMessage(TextUtil.format("&3Purchased " + shopItem.getDisplayName() + " &3for &f&l" + price + "&3 credits."));
+    new EcoBitsAccount(player).remove(BigDecimal.valueOf(price));
   }
 }

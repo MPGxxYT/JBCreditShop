@@ -1,31 +1,44 @@
 package me.mortaldev.jbcreditshop.menus;
 
-import me.mortaldev.jbcreditshop.modules.MenuData;
+import me.mortaldev.jbcreditshop.modules.Shop;
+import me.mortaldev.jbcreditshop.modules.ShopItem;
+import me.mortaldev.jbcreditshop.modules.ShopManager;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
-import me.mortaldev.menuapi.GUIManager;
 import me.mortaldev.menuapi.InventoryButton;
 import me.mortaldev.menuapi.InventoryGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
-public class EditShopMenu extends InventoryGUI {
-
-  private final MenuData menuData;
-
-  public EditShopMenu(MenuData menuData) {
-    this.menuData = menuData;
-  }
+public class ItemSettingsMenu extends InventoryGUI {
+  private final Shop shop;
+  private final ShopItem shopItem;
 
   @Override
   protected Inventory createInventory() {
-    return Bukkit.createInventory(null, 3 * 9, TextUtil.format("Edit Shop"));
+    return Bukkit.createInventory(null, 5 * 9, TextUtil.format("Item Settings"));
+  }
+
+  public ItemSettingsMenu(Shop shop, ShopItem shopItem) {
+    this.shop = shop;
+    this.shopItem = shopItem;
   }
 
   @Override
   public void decorate(Player player) {
+    ItemStack glass =
+        ItemStackHelper.builder(Material.WHITE_STAINED_GLASS_PANE).emptyName().build();
+    for (int i = 0; i < 9; i++) {
+      getInventory().setItem(i, glass);
+      getInventory().setItem(i + 36, glass);
+      if (i < 5 && i > 0) {
+        getInventory().setItem(i * 9, glass);
+        getInventory().setItem((i * 9) - 1, glass);
+      }
+    }
     addButton(0, BackButton());
     super.decorate(player);
   }
@@ -41,7 +54,7 @@ public class EditShopMenu extends InventoryGUI {
         .consumer(
             event -> {
               Player player = (Player) event.getWhoClicked();
-              GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
+              ShopManager.getInstance().openShop(shop, player, true);
             });
   }
 }

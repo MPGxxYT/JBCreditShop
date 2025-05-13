@@ -14,6 +14,7 @@ import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.records.Pair;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.inventory.ItemStack;
 
 public class ShopsYaml {
 
@@ -80,6 +81,29 @@ public class ShopsYaml {
       }
     }
     return maxKey + 1;
+  }
+
+  public void delete(Shop shop) {
+    if (shop.getSource() == null
+        || shop.getSource().first() == null
+        || shop.getSource().second() == null) {
+      Main.error(
+          "Shop object (ID: "
+              + (shop.getShopID() != null ? shop.getShopID() : "N/A")
+              + ") is missing source FileConfiguration or path. Cannot delete.");
+      return;
+    }
+    FileConfiguration config = shop.getSource().first();
+    String configPath = shop.getSource().second();
+
+    File file = new File(Main.getInstance().getDataFolder(), configPath);
+    if (!file.exists()) {
+      Main.error("Shop object (ID: " + shop.getShopID() + ") does not exist. Cannot delete.");
+      return;
+    }
+
+    config.set(shop.getSection().getCurrentPath(), null);
+    YAML.getInstance().saveConfig(config, configPath);
   }
 
   public void create(Shop shop) {

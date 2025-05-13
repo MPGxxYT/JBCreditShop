@@ -36,7 +36,7 @@ public class CreditShopCommand extends BaseCommand {
       return;
     }
     Shop shop = shopOptional.get();
-    if (!player.hasPermission("jbcreditshop.admin") || shop.isLocked()) {
+    if (shop.isLocked() && !player.hasPermission("jbcreditshop.admin")) {
       if (shop.getLockedBypassPermission().isBlank() || !player.hasPermission(shop.getLockedBypassPermission())) {
         player.sendMessage(TextUtil.format("&cYou cannot access this shop."));
         Main.playDenySound(player);

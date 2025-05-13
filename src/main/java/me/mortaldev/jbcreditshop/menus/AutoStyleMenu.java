@@ -1,6 +1,5 @@
 package me.mortaldev.jbcreditshop.menus;
 
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -13,6 +12,7 @@ import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import me.mortaldev.jbcreditshop.Main;
@@ -181,7 +181,7 @@ public class AutoStyleMenu extends InventoryGUI {
       case PRICE -> {
         result =
             result.stream()
-                .sorted(Comparator.comparingDouble(ShopItem::getPrice))
+                .sorted(Comparator.comparingDouble(ShopItem::getPrice)) //TODO: Work with discount pricing
                 .collect(Collectors.toCollection(LinkedHashSet::new));
       }
     }
@@ -233,7 +233,7 @@ public class AutoStyleMenu extends InventoryGUI {
     for (int i = 0; i < 9; i++) {
       getInventory().setItem(i, glass);
     }
-    if (menuData.getPage() > 1) {
+    if (menuData.getPage() > 1 || adminMode) {
       addButton(0, BackButton());
     }
     if (menuData.getPage() < getMaxPage()) {
@@ -242,10 +242,63 @@ public class AutoStyleMenu extends InventoryGUI {
     addButton(3, SearchButton());
     addButton(4, FilterButton());
     addButton(5, OrderButton());
+    if (player.hasPermission("jbcreditshop.admin")) {
+      addButton(2, ShopSettingsButton());
+    }
     if (adminMode) {
-
+      addButton(6, AddItemButton());
     }
     super.decorate(player);
+  }
+
+  private InventoryButton AddItemButton() {
+    return new InventoryButton()
+        .creator(
+            player ->
+                ItemStackHelper.builder(Material.LIME_DYE).name("&2&lAdd Item")
+                    .addLore("&7Add an item to this shop.")
+                    .addLore()
+                    .addLore("&7&o[Item hidden by default]")
+                    .addLore()
+                    .addLore("&7( click to add )").build())
+        .consumer(
+            event -> {
+              Player player = (Player) event.getWhoClicked();
+              // Anvil GUI for ID
+              // Then create, add and open edit menu.
+            });
+  }
+
+  private InventoryButton ShopSettingsButton() {
+    ItemStackHelper.Builder builder;
+    if (adminMode) {
+      builder = ItemStackHelper.builder(Material.HEART_OF_THE_SEA).name("&3&lShop Settings")
+          .addLore("&7Change the shop settings.")
+          .addLore()
+          .addLore("&7( left-click to change )")
+          .addLore("&7( right-click to disable admin mode )");
+    } else {
+      builder = ItemStackHelper.builder(Material.PRISMARINE_CRYSTALS).name("&3&lAdmin Mode")
+          .addLore("&7Enable admin mode to begin editing.")
+          .addLore()
+          .addLore("&7( click to enable )");
+    }
+    return new InventoryButton()
+        .creator(player -> builder.build())
+        .consumer(
+            event -> {
+              Player player = (Player) event.getWhoClicked();
+              if (adminMode) {
+                if (event.getClick() == ClickType.LEFT) {
+                  GUIManager.getInstance().openGUI(new ShopSettingsMenu(shop, true), player);
+                } else {
+                  GUIManager.getInstance()
+                      .openGUI(new AutoStyleMenu(shop, false, menuData), player);
+                }
+              } else {
+                GUIManager.getInstance().openGUI(new AutoStyleMenu(shop, true, menuData), player);
+              }
+            });
   }
 
   private InventoryButton OrderButton() {
@@ -261,8 +314,8 @@ public class AutoStyleMenu extends InventoryGUI {
             .addLore("&7ASCENDING")
             .addLore("&7DESCENDING")
             .addLore("")
-            .addLore("&7 ( left-click to change order)")
-            .addLore("&7 ( right-click to change direction)");
+            .addLore("&7( left-click to change order)")
+            .addLore("&7( right-click to change direction)");
     switch (menuData.getDirection()) {
       case ASCENDING -> builder.setLore(6, " &f&lASCENDING");
       case DESCENDING -> builder.setLore(7, " &f&lDESCENDING");
@@ -298,7 +351,7 @@ public class AutoStyleMenu extends InventoryGUI {
             .addLore("&7OWNED")
             .addLore("&7UNOWNED")
             .addLore("")
-            .addLore("&7 ( click to change )");
+            .addLore("&7( click to change )");
     switch (menuData.getFilter()) {
       case NONE -> builder.setLore(2, " &f&lNONE");
       case UNLOCKED -> builder.setLore(3, " &f&lUNLOCKED");
@@ -322,7 +375,7 @@ public class AutoStyleMenu extends InventoryGUI {
         .creator(
             player ->
                 ItemStackHelper.builder(Material.ARROW)
-                    .name("&7&lBack")
+                    .name("&c&lBack")
                     .addLore("&7Click to return to previous page.")
                     .build())
         .consumer(
@@ -331,6 +384,11 @@ public class AutoStyleMenu extends InventoryGUI {
               int page = menuData.getPage();
               if (page > 1) {
                 menuData.setPage(page - 1);
+              } else {
+                if (adminMode) {
+                  GUIManager.getInstance().openGUI(new ShopsMenu(new MenuData()), player);
+                  return;
+                }
               }
               GUIManager.getInstance()
                   .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
@@ -342,7 +400,7 @@ public class AutoStyleMenu extends InventoryGUI {
         .creator(
             player ->
                 ItemStackHelper.builder(Material.ARROW)
-                    .name("&7&lBack")
+                    .name("&2&lNext Page")
                     .addLore("&7Click to go to next page.")
                     .build())
         .consumer(
@@ -367,9 +425,9 @@ public class AutoStyleMenu extends InventoryGUI {
       builder
           .addLore("&7Query: &f" + menuData.getSearchQuery())
           .addLore("")
-          .addLore("&7 ( click to clear )");
+          .addLore("&7( click to clear )");
     } else {
-      builder.addLore("&7Query: &fNone").addLore("").addLore("&7 ( click to search )");
+      builder.addLore("&7Query: &fNone").addLore("").addLore("&7( click to search )");
     }
     return new InventoryButton()
         .creator(player -> builder.build())
@@ -414,11 +472,15 @@ public class AutoStyleMenu extends InventoryGUI {
         .consumer(
             event -> {
               Player player = (Player) event.getWhoClicked();
+              if (adminMode) {
+                GUIManager.getInstance().openGUI(new ItemSettingsMenu(shop, shopItem), player);
+                return;
+              }
               if (ShopItemsManager.getInstance().canAllowPurchase(shopItem, player)) {
                 ShopItemsManager.getInstance().purchaseShopItem(shopItem, player);
               }
               GUIManager.getInstance()
-                  .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
+                  .openGUI(new AutoStyleMenu(shop, false, menuData), player);
             });
   }
 }

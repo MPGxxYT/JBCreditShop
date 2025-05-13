@@ -2,7 +2,6 @@ package me.mortaldev.jbcreditshop.menus;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -84,7 +83,7 @@ public class ShopsMenu extends InventoryGUI {
     return shops.stream()
         .skip((page - 1) * 45L)
         .limit(45)
-        .collect(Collectors.toCollection(LinkedHashSet::new));
+        .collect(Collectors.toCollection(HashSet::new));
   }
 
   @Override
@@ -125,7 +124,7 @@ public class ShopsMenu extends InventoryGUI {
                     .addLore()
                     .addLore("&7&o[Shop locked by default]")
                     .addLore()
-                    .addLore("&7 ( click to create )")
+                    .addLore("&7( click to create )")
                     .build())
         .consumer(
             event -> {
@@ -179,9 +178,9 @@ public class ShopsMenu extends InventoryGUI {
       builder
           .addLore("&7Query: &f" + menuData.getSearchQuery())
           .addLore("")
-          .addLore("&7 ( click to clear )");
+          .addLore("&7( click to clear )");
     } else {
-      builder.addLore("&7Query: &fNone").addLore("").addLore("&7 ( click to search )");
+      builder.addLore("&7Query: &fNone").addLore("").addLore("&7( click to search )");
     }
     return new InventoryButton()
         .creator(player -> builder.build())
@@ -225,6 +224,9 @@ public class ShopsMenu extends InventoryGUI {
               Player player = (Player) event.getWhoClicked();
               if (event.getClick() == ClickType.RIGHT) {
                 ShopManager.getInstance().openShop(shop, player, true);
+                return;
+              } else if (event.getClick() == ClickType.MIDDLE) {
+                GUIManager.getInstance().openGUI(new ShopSettingsMenu(shop, true), player);
                 return;
               }
               ShopManager.getInstance().openShop(shop, player, false);

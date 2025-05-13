@@ -7,7 +7,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.records.Pair;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +19,7 @@ public class Shop {
   private String shopID;
   private String shopDisplay;
   private int defaultPrice = 12000;
-  private Material defaultDisplayMaterial;
+  private Material defaultDisplayMaterial = Material.GOLD_INGOT;
   private boolean locked = true;
   private String lockedBypassPermission;
   private int discount;
@@ -81,7 +80,7 @@ public class Shop {
   }
 
   public String getDiscountGroup() {
-    return discountGroup;
+    return discountGroup == null ? "" : discountGroup;
   }
 
   public Style getStyle() {
@@ -93,6 +92,9 @@ public class Shop {
   }
 
   public HashMap<Integer, ItemStack> getFiller() {
+    if (filler == null) {
+      filler = new HashMap<>();
+    }
     return filler.entrySet().stream()
         .map(
             entry -> {

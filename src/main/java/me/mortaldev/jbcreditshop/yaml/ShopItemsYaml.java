@@ -68,6 +68,31 @@ public class ShopItemsYaml {
     return maxKey + 1;
   }
 
+  public void delete(ShopItem shopItem) {
+    if (shopItem.getSource() == null
+        || shopItem.getSource().first() == null
+        || shopItem.getSource().second() == null) {
+      Main.error(
+          "ShopItem (ID: "
+              + (shopItem.getItemID() != null ? shopItem.getItemID() : "N/A")
+              + ") is missing source FileConfiguration or path. Cannot delete.");
+      return;
+    }
+    ConfigurationSection section = shopItem.getSection();
+    if (section == null) {
+      Main.error(
+          "ShopItem (ID: "
+              + (shopItem.getItemID() != null ? shopItem.getItemID() : "N/A")
+              + ") has a null section. Cannot delete.");
+      return;
+    }
+
+    FileConfiguration config = shopItem.getSource().first();
+    String configPath = shopItem.getSource().second();
+    config.set(section.getCurrentPath(), null);
+    YAML.getInstance().saveConfig(config, configPath);
+  }
+
   public void create(ShopItem shopItem) {
     String itemsFilePath = PATH + SHOP_ITEMS_FILE_NAME;
     File file = new File(Main.getInstance().getDataFolder(), itemsFilePath);

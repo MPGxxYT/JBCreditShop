@@ -123,9 +123,9 @@ public class ItemStackHelper {
     public Builder itemFlags(ItemFlag... itemFlags) {
       Set<ItemFlag> currentItemFlags = itemStack.getItemFlags();
       for (ItemFlag flag : currentItemFlags) {
-        itemStack.removeItemFlags(flag);
+        removeItemFlag(flag);
       }
-      itemStack.addItemFlags(itemFlags);
+      addItemFlag(itemFlags);
       return this;
     }
 
@@ -136,7 +136,7 @@ public class ItemStackHelper {
      * @return The builder instance.
      */
     public Builder addItemFlag(ItemFlag... itemFlags) {
-      itemStack.addItemFlags(itemFlags);
+      itemStack.editMeta(itemMeta -> itemMeta.addItemFlags(itemFlags));
       return this;
     }
 
@@ -147,7 +147,7 @@ public class ItemStackHelper {
      * @return The updated builder instance.
      */
     public Builder removeItemFlag(ItemFlag... itemFlags) {
-      itemStack.removeItemFlags(itemFlags);
+      itemStack.editMeta(itemMeta -> itemMeta.removeItemFlags(itemFlags));
       return this;
     }
 

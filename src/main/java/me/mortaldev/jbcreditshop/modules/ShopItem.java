@@ -2,6 +2,8 @@ package me.mortaldev.jbcreditshop.modules;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -29,7 +31,7 @@ public class ShopItem {
   private int discount = 0;
   private boolean allowDiscountStacking = true;
   private boolean locked = false;
-  private String lockedReason = "&cshopItem item cannot be purchased.";
+  private String lockedReason = "&cItem cannot be purchased.";
   private boolean visible = false;
   private boolean archived = false;
   private boolean oneTimePurchase = false;
@@ -100,9 +102,12 @@ public class ShopItem {
 
   public int getPrice() {
     if (price < 0) {
-      ShopManager.getInstance().getShop(shopID).ifPresentOrElse(shop -> price = shop.getDefaultPrice(), () -> {
-        Main.warn("Shop " + shopID + " does not exist or it's not loaded.");
-      });
+      Optional<Shop> shop = ShopManager.getInstance().getShop(shopID);
+      if (shop.isEmpty()) {
+        Main.error("Shop " + shopID + " does not exist.");
+        return 12000;
+      }
+      return shop.get().getDefaultPrice();
     }
     return price;
   }
@@ -128,7 +133,7 @@ public class ShopItem {
   }
 
   public String getGroup() {
-    return group;
+    return group == null ? "" : group;
   }
 
   public int getShopSlot() {
@@ -176,7 +181,7 @@ public class ShopItem {
     public Builder() {
       this.shopItem = new ShopItem();
     }
-    
+
     public ShopItem build() {
       return shopItem;
     }
@@ -295,7 +300,5 @@ public class ShopItem {
       shopItem.oneTimePurchase = oneTimePurchase;
       return this;
     }
-
   }
-
 }

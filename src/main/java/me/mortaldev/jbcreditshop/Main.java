@@ -9,6 +9,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 
+import me.mortaldev.jbcreditshop.listeners.ChatListener;
 import me.mortaldev.jbcreditshop.modules.playerdata.PlayerData;
 import me.mortaldev.jbcreditshop.modules.playerdata.PlayerDataCRUD;
 import me.mortaldev.jbcreditshop.modules.playerdata.PlayerDataManager;
@@ -73,7 +74,7 @@ public final class Main extends JavaPlugin {
   }
 
   public static void error(String message) {
-    Bukkit.getLogger().warning("[" + Main.getLabel() + "] " + message);
+    Bukkit.getLogger().severe("[" + Main.getLabel() + "] " + message);
   }
 
   // Timezone adjusted local date
@@ -123,7 +124,7 @@ public final class Main extends JavaPlugin {
 
     // Events
 
-    // getServer().getPluginManager().registerEvents(new EditingClickEvent(), this);
+    getServer().getPluginManager().registerEvents(new ChatListener(), this);
 
     // COMMANDS
     commandManager

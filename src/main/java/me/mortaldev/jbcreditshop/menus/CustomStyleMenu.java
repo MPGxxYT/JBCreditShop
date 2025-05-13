@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import me.mortaldev.menuapi.GUIManager;
 import me.mortaldev.menuapi.InventoryButton;
 import me.mortaldev.menuapi.InventoryGUI;
 import org.bukkit.Bukkit;
@@ -44,7 +45,7 @@ public class CustomStyleMenu extends InventoryGUI {
     return size;
   }
 
-  private int sortSlots() {
+  private int sortSlots() { //TODO: Fix bug related to doubled items
     Set<ShopItem> nonSlotted = new HashSet<>();
     for (ShopItem shopItem : shopItems) {
       if (!shopItem.canBeDisplayed()) {
@@ -94,6 +95,10 @@ public class CustomStyleMenu extends InventoryGUI {
         .consumer(
             event -> {
               Player player = (Player) event.getWhoClicked();
+              if (adminMode) {
+                GUIManager.getInstance().openGUI(new ItemSettingsMenu(shop, shopItem), player);
+                return;
+              }
               if (ShopItemsManager.getInstance().canAllowPurchase(shopItem, player)) {
                 ShopItemsManager.getInstance().purchaseShopItem(shopItem, player);
               }
