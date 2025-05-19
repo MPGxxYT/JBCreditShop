@@ -72,6 +72,11 @@ public class ShopItemsManager {
   }
 
   public ItemStack getShopMenuStack(ShopItem shopItem, boolean adminMode, Player player) {
+    return getShopMenuStack(shopItem, adminMode, player, true);
+  }
+
+  public ItemStack getShopMenuStack(
+      ShopItem shopItem, boolean adminMode, Player player, boolean displayPrompt) {
     Material display = shopItem.getDisplayMaterial();
     Shop shop = ShopManager.getInstance().getShop(shopItem.getShopID()).get();
     if (display == null || display.isAir()) {
@@ -106,34 +111,60 @@ public class ShopItemsManager {
           .addLore("&7( right-click to modify )");
     } else {
       if (shopItem.getDiscount() > 0 || shop.getDiscount() > 0) {
-        int discountPrice = getDiscountPrice(shopItem, shop);
-        double discountPercent = getDiscountPercent(shopItem, shop);
-        builder
-            .addLore("&e&l SALE! &e&n" + discountPercent + "&l%&e off!")
-            .addLore()
-            .addLore("&3&lPrice: &7&m" + shopItem.getPrice() + "&r &e&l" + discountPrice);
+        String shopDiscountGroup = shop.getDiscountGroup();
+        if (shopDiscountGroup.isBlank()) {
+          applyDiscountText(shopItem, shop, builder);
+        } else {
+          if (shopItem.getGroup().equals(shopDiscountGroup)) {
+            applyDiscountText(shopItem, shop, builder);
+          } else if (shopItem.getDiscount() > 0) {
+            applyDiscountText(shopItem, shop, builder);
+          } else {
+            builder.addLore("&3&lPrice: &f" + shopItem.getPrice());
+          }
+        }
       } else {
         builder.addLore("&3&lPrice: &f" + shopItem.getPrice());
       }
-      String purchasedPermission = shopItem.getPurchasedPermission();
-      if (!purchasedPermission.isBlank()) {
-        if (player.hasPermission(purchasedPermission)) {
-          builder.addLore().addLore("&cYou already own this.");
+      if (displayPrompt) {
+        if (shopItem.isLocked()) {
+          builder
+              .addLore()
+              .addLore(
+                  shopItem.getLockedReason() == null || shopItem.getLockedReason().isBlank()
+                      ? "&cLocked!"
+                      : "&c" + shopItem.getLockedReason());
           return builder.build();
         }
-      } else if (shopItem.isOneTimePurchase()) {
-        PlayerData playerData =
-            PlayerDataManager.getInstance()
-                .getByID(player.getUniqueId().toString())
-                .orElse(PlayerData.create(player.getUniqueId().toString()));
-        if (playerData.hasPurchasedItem(shopItem)) {
-          builder.addLore().addLore("&cYou already own this. (one time purchase)");
-          return builder.build();
+        String purchasedPermission = shopItem.getPurchasedPermission();
+        if (!purchasedPermission.isBlank()) {
+          if (player.hasPermission(purchasedPermission)) {
+            builder.addLore().addLore("&cOwned!");
+            return builder.build();
+          }
+        } else if (shopItem.isOneTimePurchase()) {
+          PlayerData playerData =
+              PlayerDataManager.getInstance()
+                  .getByID(player.getUniqueId().toString())
+                  .orElse(PlayerData.create(player.getUniqueId().toString()));
+          if (playerData.hasPurchasedItem(shopItem)) {
+            builder.addLore().addLore("&cOwned!");
+            return builder.build();
+          }
         }
+        builder.addLore("").addLore("&7( click to purchase )");
       }
-      builder.addLore("").addLore("&7( click to purchase )");
     }
     return builder.build();
+  }
+
+  private void applyDiscountText(ShopItem shopItem, Shop shop, ItemStackHelper.Builder builder) {
+    int discountPrice = getDiscountPrice(shopItem, shop);
+    double discountPercent = getDiscountPercent(shopItem, shop);
+    builder
+        .addLore("&e&l SALE! &e&n" + discountPercent + "&l%&e off!")
+        .addLore()
+        .addLore("&3&lPrice: &7&m" + shopItem.getPrice() + "&r &e&l" + discountPrice);
   }
 
   public double getDiscountPercent(ShopItem shopItem) {
@@ -260,6 +291,15 @@ public class ShopItemsManager {
   }
 
   public boolean canAllowPurchase(ShopItem shopItem, Player player) {
+    if (shopItem.isLocked()) {
+      player.sendMessage(
+          TextUtil.format(
+              shopItem.getLockedReason() == null || shopItem.getLockedReason().isBlank()
+                  ? "&cLocked!"
+                  : "&c" + shopItem.getLockedReason()));
+      Main.playDenySound(player);
+      return false;
+    }
     String purchasedPermission = shopItem.getPurchasedPermission();
     if (!purchasedPermission.isBlank()) {
       if (player.hasPermission(purchasedPermission)) {
@@ -345,5 +385,6 @@ public class ShopItemsManager {
         TextUtil.format(
             "&3Purchased " + shopItem.getDisplayName() + " &3for &f&l" + price + "&3 credits."));
     new EcoBitsAccount(player).remove(BigDecimal.valueOf(price));
+    Main.playAcceptSound(player);
   }
 }

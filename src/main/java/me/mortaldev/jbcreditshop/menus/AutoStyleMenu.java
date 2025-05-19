@@ -1,8 +1,10 @@
 package me.mortaldev.jbcreditshop.menus;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 import me.mortaldev.jbcreditshop.Main;
+import me.mortaldev.jbcreditshop.ecobits.EcoBitsAccount;
 import me.mortaldev.jbcreditshop.modules.*;
 import me.mortaldev.jbcreditshop.modules.playerdata.PlayerData;
 import me.mortaldev.jbcreditshop.modules.playerdata.PlayerDataManager;
@@ -15,6 +17,7 @@ import me.mortaldev.menuapi.InventoryGUI;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
@@ -26,6 +29,7 @@ public class AutoStyleMenu extends InventoryGUI {
   private final Set<ShopItem> shopItems;
   private final boolean adminMode;
   private final MenuData menuData;
+  private static final String CREDITS_LINK = "https://store.jailbreakmc.games/category/credits";
 
   public AutoStyleMenu(Shop shop, boolean adminMode, MenuData menuData) {
     this.adminMode = adminMode;
@@ -243,8 +247,37 @@ public class AutoStyleMenu extends InventoryGUI {
     }
     if (adminMode) {
       addButton(6, AddItemButton());
+    } else {
+      addButton(6, BalanceButton());
     }
     super.decorate(player);
+  }
+
+  private InventoryButton BalanceButton() {
+    return new InventoryButton()
+        .creator(
+            player -> {
+              BigDecimal currentBalance = new EcoBitsAccount(player).getCurrentBalance();
+              return ItemStackHelper.builder(Material.SUNFLOWER)
+                  .name("&e&lBalance")
+                  .addLore(
+                      "&f"
+                          + currentBalance.setScale(0, java.math.RoundingMode.DOWN).toPlainString()
+                          + " Credits")
+                  .addLore()
+                  .addLore("&e&oClick to purchase more credits.")
+                  .build();
+            })
+        .consumer(
+            event -> {
+              Player player = (Player) event.getWhoClicked();
+              player.sendMessage(TextUtil.format(""));
+              player.sendMessage(TextUtil.format("&e            Visit our store to purchase credits."));
+              player.sendMessage(TextUtil.format("&f > "+CREDITS_LINK+"##url:"+CREDITS_LINK+"##ttp:&7Click to open!## < ", true));
+              player.sendMessage(TextUtil.format(""));
+              player.closeInventory();
+              player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.5f, 1.414214f);
+            });
   }
 
   private InventoryButton AddItemButton() {
@@ -372,8 +405,10 @@ public class AutoStyleMenu extends InventoryGUI {
               Player player = (Player) event.getWhoClicked();
               if (event.isRightClick()) {
                 menuData.setDirection(MenuData.Direction.getNext(menuData.getDirection()));
+                player.playSound(player.getLocation(), Sound.BLOCK_TRIPWIRE_CLICK_ON, 0.5f, 0.75f);
               } else {
                 menuData.setOrderBy(MenuData.OrderBy.getNext(menuData.getOrderBy()));
+                player.playSound(player.getLocation(), Sound.BLOCK_TRIPWIRE_CLICK_ON, 0.5f, 0.5f);
               }
               GUIManager.getInstance()
                   .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
@@ -403,6 +438,7 @@ public class AutoStyleMenu extends InventoryGUI {
         .consumer(
             event -> {
               Player player = (Player) event.getWhoClicked();
+              player.playSound(player.getLocation(), Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_ON, 0.5f, 1);
               MenuData.Filter filter = menuData.getFilter();
               menuData.setFilter(filter.getNext(filter));
               GUIManager.getInstance()
@@ -474,13 +510,14 @@ public class AutoStyleMenu extends InventoryGUI {
         .consumer(
             event -> {
               Player player = (Player) event.getWhoClicked();
+              player.playSound(player.getLocation(), Sound.BLOCK_TRIPWIRE_CLICK_ON, 0.5f, 0.75f);
               if (!menuData.getSearchQuery().isBlank()) {
                 menuData.setSearchQuery("");
                 GUIManager.getInstance()
                     .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
                 return;
               }
-              if (event.isLeftClick()) {
+              if (menuData.getSearchQuery().isBlank() || event.isLeftClick()) {
                 new AnvilGUI.Builder()
                     .plugin(Main.getInstance())
                     .title("Search")
@@ -493,6 +530,7 @@ public class AutoStyleMenu extends InventoryGUI {
                             menuData.setSearchQuery(textEntry);
                             GUIManager.getInstance()
                                 .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
+                            player.playSound(player.getLocation(), Sound.BLOCK_TRIPWIRE_CLICK_ON, 0.5f, 1f);
                           }
                           return Collections.emptyList();
                         })
@@ -519,9 +557,24 @@ public class AutoStyleMenu extends InventoryGUI {
                 return;
               }
               if (ShopItemsManager.getInstance().canAllowPurchase(shopItem, player)) {
-                ShopItemsManager.getInstance().purchaseShopItem(shopItem, player);
+                player.playSound(player.getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON, 0.5f, 1.5f);
+                ConfirmMenu confirmMenu =
+                    new ConfirmMenu(
+                        "&e&lPurchase " + shopItem.getDisplayName() + "?",
+                        ShopItemsManager.getInstance()
+                            .getShopMenuStack(shopItem, false, player, false),
+                        (player1) -> {
+                          ShopItemsManager.getInstance().purchaseShopItem(shopItem, player);
+                          GUIManager.getInstance()
+                              .openGUI(new AutoStyleMenu(shop, false, menuData), player);
+                        },
+                        (player1) -> {
+                          player.playSound(player.getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON, 0.5f, 1.5f);
+                          GUIManager.getInstance()
+                              .openGUI(new AutoStyleMenu(shop, false, menuData), player);
+                        });
+                GUIManager.getInstance().openGUI(confirmMenu, player);
               }
-              GUIManager.getInstance().openGUI(new AutoStyleMenu(shop, false, menuData), player);
             });
   }
 }

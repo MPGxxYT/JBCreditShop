@@ -153,9 +153,22 @@ public class CustomStyleMenu extends InventoryGUI {
                 return;
               }
               if (ShopItemsManager.getInstance().canAllowPurchase(shopItem, player)) {
-                ShopItemsManager.getInstance().purchaseShopItem(shopItem, player);
+                ConfirmMenu confirmMenu =
+                    new ConfirmMenu(
+                        "&e&lPurchase " + shopItem.getDisplayName() + "?",
+                        ShopItemsManager.getInstance()
+                            .getShopMenuStack(shopItem, false, player, false),
+                        (player1) -> {
+                          ShopItemsManager.getInstance().purchaseShopItem(shopItem, player);
+                          GUIManager.getInstance()
+                              .openGUI(new CustomStyleMenu(shop, false), player);
+                        },
+                        (player1) -> {
+                          GUIManager.getInstance()
+                              .openGUI(new CustomStyleMenu(shop, false), player);
+                        });
+                GUIManager.getInstance().openGUI(confirmMenu, player);
               }
-              GUIManager.getInstance().openGUI(new CustomStyleMenu(shop, false), player);
             });
   }
 }

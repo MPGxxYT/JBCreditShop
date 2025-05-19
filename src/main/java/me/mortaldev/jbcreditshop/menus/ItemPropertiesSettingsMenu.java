@@ -183,7 +183,7 @@ public class ItemPropertiesSettingsMenu extends InventoryGUI {
 
               new AnvilGUI.Builder()
                   .plugin(Main.getInstance())
-                  .title("Sh")
+                  .title("Shop Slot")
                   .itemLeft(
                       ItemStackHelper.builder(Material.FLOWER_POT)
                           .name(shopItem.getShopSlot() + "")

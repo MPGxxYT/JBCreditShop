@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import me.mortaldev.YAML;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.modules.ShopItem;
@@ -92,7 +91,7 @@ public class ShopItemsYaml {
     FileConfiguration config = shopItem.getSource().first();
     String configPath = shopItem.getSource().second();
     config.set(section.getCurrentPath(), null);
-    YAML.getInstance().saveConfig(config, configPath);
+    Main.getYAML().saveConfig(config, configPath);
   }
 
   public void create(ShopItem shopItem) {
@@ -108,7 +107,7 @@ public class ShopItemsYaml {
       }
     }
 
-    FileConfiguration config = YAML.getInstance().getConfig(itemsFilePath);
+    FileConfiguration config = Main.getYAML().getConfig(itemsFilePath);
     shopItem.setSource(new Pair<>(config, itemsFilePath));
 
     String newSectionKey = String.valueOf(findNextAvailableNumericKey(config));
@@ -140,7 +139,7 @@ public class ShopItemsYaml {
     String configPath = shopItem.getSource().second();
 
     write(shopItem.getSection(), shopItem); // Write into the item's assigned section
-    YAML.getInstance().saveConfig(config, configPath);
+    Main.getYAML().saveConfig(config, configPath);
   }
 
   public Set<ShopItem> read() {

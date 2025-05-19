@@ -79,7 +79,7 @@ public class ItemDisplaySettingsMenu extends InventoryGUI {
               Player player = (Player) event.getWhoClicked();
               ItemStack cursor = event.getCursor();
               if (cursor != null) {
-                cursor = cursor.clone();
+                cursor = cursor.clone().asOne();
               }
               if (cursor == null || cursor.getType().isAir()) {
                 if (event.isRightClick()) {

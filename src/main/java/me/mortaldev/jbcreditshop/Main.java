@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
+
+import me.mortaldev.YAML;
 import me.mortaldev.jbcreditshop.commands.CreditShopCommand;
 import me.mortaldev.jbcreditshop.listeners.ChatListener;
 import me.mortaldev.jbcreditshop.modules.Shop;
@@ -34,7 +36,29 @@ public final class Main extends JavaPlugin {
   private static boolean debug = false;
 
   public static void playDenySound(Player player) {
-    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
+    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, 1);
+  }
+
+  public static void playAcceptSound(Player player) {
+    Bukkit.getScheduler()
+        .scheduleSyncDelayedTask(
+            instance,
+            () ->
+                player.playSound(
+                    player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5f, 0.707107f),
+            1);
+    Bukkit.getScheduler()
+        .scheduleSyncDelayedTask(
+            instance,
+            () ->
+                player.playSound(
+                    player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5f, 0.890899f),
+            3);
+    Bukkit.getScheduler()
+        .scheduleSyncDelayedTask(
+            instance,
+            () -> player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5f, 1.059463f),
+            5);
   }
 
   public static Main getInstance() {
@@ -75,6 +99,12 @@ public final class Main extends JavaPlugin {
   // Timezone adjusted local date
   public static LocalDateTime getLocalDateTime() {
     return ZonedDateTime.now(ZoneId.of("America/New_York")).toLocalDateTime();
+  }
+
+  public static YAML getYAML() {
+    YAML instance1 = YAML.getInstance();
+    instance1.setMain(getInstance());
+    return instance1;
   }
 
   @Override

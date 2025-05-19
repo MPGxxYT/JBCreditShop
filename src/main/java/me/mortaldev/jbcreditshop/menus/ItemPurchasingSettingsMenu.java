@@ -114,15 +114,6 @@ public class ItemPurchasingSettingsMenu extends InventoryGUI {
                               if (slot == 2) {
                                 String textEntry = stateSnapshot.getText();
                                 textEntry = textEntry.trim();
-                                if (textEntry.isBlank()) {
-                                  player.sendMessage(
-                                      TextUtil.format("&cMust enter a permission for the item."));
-                                  Main.playDenySound(player);
-                                  GUIManager.getInstance()
-                                      .openGUI(
-                                          new ItemPurchasingSettingsMenu(shop, shopItem), player);
-                                  return Collections.emptyList();
-                                }
                                 ShopItem build =
                                     shopItem.toBuilder().setPurchasedPermission(textEntry).build();
                                 ShopItemsManager.getInstance().updateShopItem(build);
@@ -187,15 +178,6 @@ public class ItemPurchasingSettingsMenu extends InventoryGUI {
                               if (slot == 2) {
                                 String textEntry = stateSnapshot.getText();
                                 textEntry = textEntry.trim();
-                                if (textEntry.isBlank()) {
-                                  player.sendMessage(
-                                      TextUtil.format("&cMust enter a command for the item."));
-                                  Main.playDenySound(player);
-                                  GUIManager.getInstance()
-                                      .openGUI(
-                                          new ItemPurchasingSettingsMenu(shop, shopItem), player);
-                                  return Collections.emptyList();
-                                }
                                 ShopItem build =
                                     shopItem.toBuilder().setPurchasedCommand(textEntry).build();
                                 ShopItemsManager.getInstance().updateShopItem(build);
@@ -224,6 +206,8 @@ public class ItemPurchasingSettingsMenu extends InventoryGUI {
                       purchasedItem == null || purchasedItem.getType().isAir()
                           ? "&f( NONE )"
                           : "&f"
+                              + purchasedItem.getAmount()
+                              + " of "
                               + purchasedItem.getType().name()
                               + " named "
                               + (purchasedItem.hasItemMeta()

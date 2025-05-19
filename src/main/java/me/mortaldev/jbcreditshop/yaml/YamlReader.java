@@ -29,8 +29,7 @@ public class YamlReader {
     }
     HashMap<FileConfiguration, String> configs = new HashMap<>();
     for (File file : files) {
-      YAML yaml = YAML.getInstance();
-      yaml.setMain(Main.getInstance());
+      YAML yaml = Main.getYAML();
       FileConfiguration config = yaml.getConfig(path + file.getName());
       if (config == null) {
         continue;

@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import me.mortaldev.YAML;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.records.Pair;
@@ -102,7 +101,7 @@ public class ShopsYaml {
     }
 
     config.set(shop.getSection().getCurrentPath(), null);
-    YAML.getInstance().saveConfig(config, configPath);
+    Main.getYAML().saveConfig(config, configPath);
   }
 
   public void create(Shop shop) {
@@ -117,7 +116,7 @@ public class ShopsYaml {
       }
     }
 
-    FileConfiguration config = YAML.getInstance().getConfig(shopsFilePath);
+    FileConfiguration config = Main.getYAML().getConfig(shopsFilePath);
     shop.setSource(new Pair<>(config, shopsFilePath));
 
     String newSectionKey = String.valueOf(findNextAvailableNumericKey(config));
@@ -166,7 +165,7 @@ public class ShopsYaml {
     }
 
     write(sectionToSaveIn, shop); // Pass the correct section (e.g., "0", "1") to write into.
-    YAML.getInstance().saveConfig(config, configPath);
+    Main.getYAML().saveConfig(config, configPath);
   }
 
   // Writes the shop's data into the provided ConfigurationSection.
