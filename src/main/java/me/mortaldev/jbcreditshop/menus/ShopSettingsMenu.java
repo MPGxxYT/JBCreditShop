@@ -437,7 +437,7 @@ public class ShopSettingsMenu extends InventoryGUI {
               ChatListener.addConsumer(
                   player.getUniqueId(),
                   (message) -> {
-                    String string = TextUtil.componentToString(message);
+                    String string = TextUtil.chatComponentToString(message);
                     Shop newShop = shop.toBuilder().setShopDisplay(string).build();
                     ShopManager.getInstance().updateShop(newShop);
                     GUIManager.getInstance()

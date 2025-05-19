@@ -155,7 +155,7 @@ public class ItemDisplaySettingsMenu extends InventoryGUI {
               ChatListener.addConsumer(
                   player.getUniqueId(),
                   component -> {
-                    String string = TextUtil.componentToString(component);
+                    String string = TextUtil.chatComponentToString(component);
                     ShopItem build = shopItem.toBuilder().setDisplayName(string).build();
                     ShopItemsManager.getInstance().updateShopItem(build);
                     GUIManager.getInstance()
@@ -207,7 +207,7 @@ public class ItemDisplaySettingsMenu extends InventoryGUI {
               ChatListener.addConsumer(
                   player.getUniqueId(),
                   component -> {
-                    String string = TextUtil.componentToString(component);
+                    String string = TextUtil.chatComponentToString(component);
                     String[] split = string.split(";;");
                     List<String> collect = Arrays.stream(split).toList();
                     ShopItem build = shopItem.toBuilder().setDescription(collect).build();

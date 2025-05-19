@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.records.Pair;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -88,6 +89,11 @@ public class TextUtil {
    */
   public static String componentToString(Component component) {
     return PlainTextComponentSerializer.plainText().serialize(component);
+  }
+
+  // event.originalMessage()
+  public static String chatComponentToString(Component component) {
+    return component instanceof TextComponent ? ((TextComponent) component).content() : "";
   }
 
   /**

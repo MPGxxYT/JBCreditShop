@@ -30,7 +30,7 @@ public class ChatListener implements Listener {
     UUID uuid = event.getPlayer().getUniqueId();
     if (consumers.containsKey(uuid)) {
       Bukkit.getScheduler()
-          .runTask(Main.getInstance(), () -> consumers.remove(uuid).accept(event.message()));
+          .runTask(Main.getInstance(), () -> consumers.remove(uuid).accept(event.originalMessage()));
       event.setCancelled(true);
     }
   }
