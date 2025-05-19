@@ -29,4 +29,30 @@ public class Utils {
     }
     return freeSpace >= itemStack.getAmount();
   }
+
+  /**
+   * Converts the given ItemStack into a formatted item name string.
+   *
+   * @param itemStack The ItemStack to convert.
+   * @return The formatted item name string.
+   */
+  public static String itemName(ItemStack itemStack) {
+    String name = itemStack.getType().getKey().getKey().replaceAll("_", " ").toLowerCase();
+    // "lapis lazuli"
+
+    String[] strings = name.split(" ");
+    StringBuilder stringBuilder = new StringBuilder();
+    for (int i = 0; i < strings.length; i++) {
+      String string = strings[i];
+      if (string.length() > 1) {
+        string = string.substring(0, 1).toUpperCase() + string.substring(1);
+        if (i + 1 < strings.length) {
+          stringBuilder.append(string).append(" ");
+        } else {
+          stringBuilder.append(string);
+        }
+      }
+    }
+    return stringBuilder.toString();
+  }
 }

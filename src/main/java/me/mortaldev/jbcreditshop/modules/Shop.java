@@ -23,7 +23,7 @@ public class Shop {
   private boolean locked = true;
   private String lockedBypassPermission;
   private int discount;
-  private String discountGroup;
+  private String discountGroup; // TODO: Turn discount + discountGroup into HashMap<String, Integer> as <Group, Discount> to allow for multiple discounts
   private Style style = Style.AUTO;
   private int size;
   private HashMap<Integer, String> filler;

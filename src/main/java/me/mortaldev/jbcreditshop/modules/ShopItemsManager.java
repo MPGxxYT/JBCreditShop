@@ -1,12 +1,12 @@
 package me.mortaldev.jbcreditshop.modules;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 import me.mortaldev.jbcreditshop.modules.shopstats.ShopStatsCRUD;
-import me.mortaldev.jbcreditshop.modules.transaction.TransactionLog;
 import me.mortaldev.jbcreditshop.modules.transaction.TransactionLogManager;
 import me.mortaldev.jbcreditshop.modules.transaction.data.Transaction;
 import net.luckperms.api.LuckPerms;
@@ -42,15 +42,53 @@ public class ShopItemsManager {
 
   private ShopItemsManager() {}
 
+  public ItemStack getBasicShopMenuStack(ShopItem shopItem) {
+    Material display = shopItem.getDisplayMaterial();
+    Shop shop = ShopManager.getInstance().getShop(shopItem.getShopID()).get();
+    if (display == null || display.isAir()) {
+      display = shop.getDefaultDisplayMaterial();
+    }
+    ItemStackHelper.Builder builder;
+    if (shopItem.isUseDisplayItemStack()
+        && shopItem.getDisplayItemStack() != null
+        && !shopItem.getDisplayItemStack().getType().isAir()) {
+      builder =
+          ItemStackHelper.builder(shopItem.getDisplayItemStack())
+              .name(shopItem.getDisplayName())
+              .lore(new ArrayList<>());
+    } else {
+      builder = ItemStackHelper.builder(display).name(shopItem.getDisplayName());
+    }
+    if (!shopItem.getDescription().isEmpty()) {
+      builder.addLore(shopItem.getDescription()).addLore("");
+    }
+    builder
+        .addLore("&3&lID: &f" + shopItem.getItemID())
+        .addLore("&3&lShop ID: &f" + shopItem.getShopID())
+        .addLore("&3&lLocked: &f" + shopItem.isLocked())
+        .addLore("&3&lVisible: &f" + shopItem.isVisible())
+        .addLore("&3&lPrice: &f" + shopItem.getPrice())
+        .addLore("&3&lDiscount: &f" + shopItem.getDiscount() + "%");
+    return builder.build();
+  }
+
   public ItemStack getShopMenuStack(ShopItem shopItem, boolean adminMode, Player player) {
     Material display = shopItem.getDisplayMaterial();
     Shop shop = ShopManager.getInstance().getShop(shopItem.getShopID()).get();
     if (display == null || display.isAir()) {
-      display =
-          shop.getDefaultDisplayMaterial();
+      display = shop.getDefaultDisplayMaterial();
     }
-    ItemStackHelper.Builder builder =
-        ItemStackHelper.builder(display).name(shopItem.getDisplayName());
+    ItemStackHelper.Builder builder;
+    if (shopItem.isUseDisplayItemStack()
+        && shopItem.getDisplayItemStack() != null
+        && !shopItem.getDisplayItemStack().getType().isAir()) {
+      builder =
+          ItemStackHelper.builder(shopItem.getDisplayItemStack())
+              .name(shopItem.getDisplayName())
+              .lore(new ArrayList<>());
+    } else {
+      builder = ItemStackHelper.builder(display).name(shopItem.getDisplayName());
+    }
     if (!shopItem.getDescription().isEmpty()) {
       builder.addLore(shopItem.getDescription()).addLore("");
     }
@@ -62,19 +100,12 @@ public class ShopItemsManager {
     if (adminMode) {
       builder
           .addLore("&3&lLocked: &f" + shopItem.isLocked())
-          .addLore("&3&lVisible: &f" + shopItem.canBeDisplayed())
+          .addLore("&3&lVisible: &f" + shopItem.isVisible())
           .addLore("&3&lPrice: &f" + shopItem.getPrice())
           .addLore("&3&lDiscount: &f" + shopItem.getDiscount() + "%")
           .addLore("")
-          .addLore("&7( click to modify )");
+          .addLore("&7( right-click to modify )");
     } else {
-      String purchasedPermission = shopItem.getPurchasedPermission();
-      if (!purchasedPermission.isBlank()) {
-        if (player.hasPermission(purchasedPermission)) {
-          builder.addLore("&cYou already own this. (one time purchase)");
-          return builder.build();
-        }
-      }
       if (shopItem.getDiscount() > 0 || shop.getDiscount() > 0) {
         int discountPrice = getDiscountPrice(shopItem, shop);
         double discountPercent = getDiscountPercent(shopItem, shop);
@@ -83,20 +114,40 @@ public class ShopItemsManager {
             .addLore()
             .addLore("&3&lPrice: &7&m" + shopItem.getPrice() + "&r &e&l" + discountPrice);
       } else {
-        builder
-            .addLore("&3&lPrice: &f" + shopItem.getPrice());
+        builder.addLore("&3&lPrice: &f" + shopItem.getPrice());
       }
-      builder
-          .addLore("")
-          .addLore("&7( click to purchase )");
+      String purchasedPermission = shopItem.getPurchasedPermission();
+      if (!purchasedPermission.isBlank()) {
+        if (player.hasPermission(purchasedPermission)) {
+          builder.addLore().addLore("&cYou already own this.");
+          return builder.build();
+        }
+      } else if (shopItem.isOneTimePurchase()) {
+        PlayerData playerData =
+            PlayerDataManager.getInstance()
+                .getByID(player.getUniqueId().toString())
+                .orElse(PlayerData.create(player.getUniqueId().toString()));
+        if (playerData.hasPurchasedItem(shopItem)) {
+          builder.addLore().addLore("&cYou already own this. (one time purchase)");
+          return builder.build();
+        }
+      }
+      builder.addLore("").addLore("&7( click to purchase )");
     }
     return builder.build();
+  }
+
+  public double getDiscountPercent(ShopItem shopItem) {
+    return getDiscountPercent(
+        shopItem, ShopManager.getInstance().getShop(shopItem.getShopID()).get());
   }
 
   public double getDiscountPercent(ShopItem shopItem, Shop shop) {
     if (shopItem.getDiscount() > 0 || shop.getDiscount() > 0) {
       if (shop.getDiscount() > 0) {
-        if (shop.getDiscountGroup().isBlank() || !shop.getDiscountGroup().isBlank() && shopItem.getGroup().equalsIgnoreCase(shop.getDiscountGroup())) {
+        if (shop.getDiscountGroup().isBlank()
+            || !shop.getDiscountGroup().isBlank()
+                && shopItem.getGroup().equalsIgnoreCase(shop.getDiscountGroup())) {
           double shopItemDiscountRate = shopItem.getDiscount() / 100.0;
           double shopDiscountRate = shop.getDiscount() / 100.0;
           if (shopItem.isAllowDiscountStacking()) {
@@ -122,12 +173,15 @@ public class ShopItemsManager {
     if (shopItem.getDiscount() > 0 || shop.getDiscount() > 0) {
       int discountPrice = shopItem.getPrice();
       if (shop.getDiscount() > 0) {
-        if (shop.getDiscountGroup().isBlank() || !shop.getDiscountGroup().isBlank() && shopItem.getGroup().equalsIgnoreCase(shop.getDiscountGroup())) {
+        if (shop.getDiscountGroup().isBlank()
+            || !shop.getDiscountGroup().isBlank()
+                && shopItem.getGroup().equalsIgnoreCase(shop.getDiscountGroup())) {
           if (shopItem.isAllowDiscountStacking()) {
             discountPrice = (int) Math.ceil(discountPrice * (1 - shopItem.getDiscount() / 100.0));
             discountPrice = (int) Math.ceil(discountPrice * (1 - shop.getDiscount() / 100.0));
           } else {
-            int discountPrice1 = (int) Math.ceil(discountPrice * (1 - shopItem.getDiscount() / 100.0));
+            int discountPrice1 =
+                (int) Math.ceil(discountPrice * (1 - shopItem.getDiscount() / 100.0));
             int discountPrice2 = (int) Math.ceil(discountPrice * (1 - shop.getDiscount() / 100.0));
             discountPrice = Math.min(discountPrice1, discountPrice2);
           }
@@ -148,7 +202,13 @@ public class ShopItemsManager {
   public void sortByShop() {
     for (ShopItem shopItem : shopItems) {
       if (!shopItemsByShopID.containsKey(shopItem.getShopID())) {
-        shopItemsByShopID.put(shopItem.getShopID(), new HashSet<>(){{add(shopItem);}});
+        shopItemsByShopID.put(
+            shopItem.getShopID(),
+            new HashSet<>() {
+              {
+                add(shopItem);
+              }
+            });
       }
       shopItemsByShopID.get(shopItem.getShopID()).add(shopItem);
     }
@@ -180,9 +240,24 @@ public class ShopItemsManager {
     return items;
   }
 
-  public void addShopItem(ShopItem shopItem) {
+  public void deleteShopItem(ShopItem shopItem) {
+    shopItems.removeIf(entry -> entry.getItemID().equals(shopItem.getItemID()));
+    ShopItemsYaml.getInstance().delete(shopItem);
+  }
+
+  public void updateShopItem(ShopItem shopItem) {
+    shopItems.removeIf(entry -> entry.getItemID().equals(shopItem.getItemID()));
+    ShopItemsYaml.getInstance().save(shopItem);
+    shopItems.add(shopItem);
+  }
+
+  public boolean addShopItem(ShopItem shopItem) {
+    if (getShopItem(shopItem.getItemID()) != null) {
+      return false;
+    }
     shopItems.add(shopItem);
     ShopItemsYaml.getInstance().create(shopItem);
+    return true;
   }
 
   public boolean canAllowPurchase(ShopItem shopItem, Player player) {
@@ -196,13 +271,15 @@ public class ShopItemsManager {
     }
     BigDecimal currentBalance = new EcoBitsAccount(player).getCurrentBalance();
     if (currentBalance.compareTo(BigDecimal.valueOf(getDiscountPrice(shopItem))) < 0) {
-      player.sendMessage(
-          TextUtil.format("&cYou cannot afford this. Not enough credits!"));
+      player.sendMessage(TextUtil.format("&cYou cannot afford this. Not enough credits!"));
       Main.playDenySound(player);
       return false;
     }
     if (shopItem.isOneTimePurchase()) {
-      PlayerData playerData = PlayerDataManager.getInstance().getByID(player.getUniqueId().toString()).orElse(PlayerData.create(player.getUniqueId().toString()));
+      PlayerData playerData =
+          PlayerDataManager.getInstance()
+              .getByID(player.getUniqueId().toString())
+              .orElse(PlayerData.create(player.getUniqueId().toString()));
       if (playerData.hasPurchasedItem(shopItem)) {
         player.sendMessage(TextUtil.format("&cYou can only purchase this once!"));
         Main.playDenySound(player);
@@ -213,12 +290,15 @@ public class ShopItemsManager {
   }
 
   public void purchaseShopItem(ShopItem shopItem, Player player) {
-    if (!shopItem.canBeDisplayed()) {
+    if (shopItem.cannotBeDisplayed() || !shopItem.isVisible()) {
       player.sendMessage(TextUtil.format("&cThis item is not for sale."));
       Main.playDenySound(player);
       return;
     }
-    PlayerData playerData = PlayerDataManager.getInstance().getByID(player.getUniqueId().toString()).orElse(PlayerData.create(player.getUniqueId().toString()));
+    PlayerData playerData =
+        PlayerDataManager.getInstance()
+            .getByID(player.getUniqueId().toString())
+            .orElse(PlayerData.create(player.getUniqueId().toString()));
     if (shopItem.isOneTimePurchase()) {
       if (playerData.hasPurchasedItem(shopItem)) {
         player.sendMessage(TextUtil.format("&cYou can only purchase this once!"));
@@ -227,7 +307,12 @@ public class ShopItemsManager {
       }
     }
     if (!shopItem.getPurchasedCommand().isBlank()) {
-      Bukkit.dispatchCommand(Bukkit.getConsoleSender(), shopItem.getPurchasedCommand().replaceFirst("/", "").replace("%player%", player.getName()));
+      Bukkit.dispatchCommand(
+          Bukkit.getConsoleSender(),
+          shopItem
+              .getPurchasedCommand()
+              .replaceFirst("/", "")
+              .replace("%player%", player.getName()));
     }
     if (shopItem.getPurchasedItem() != null && !shopItem.getPurchasedItem().getType().isAir()) {
       if (!Utils.canInventoryHold(player.getInventory(), shopItem.getPurchasedItem())) {
@@ -250,13 +335,16 @@ public class ShopItemsManager {
     }
     int price = getDiscountPrice(shopItem);
     // Transaction Logging
-    Transaction transaction = new Transaction(player.getUniqueId().toString(), shopItem.getItemID(), price);
+    Transaction transaction =
+        new Transaction(player.getUniqueId().toString(), shopItem.getItemID(), price);
     TransactionLogManager.getInstance().addTransaction(transaction);
     // **************************
     ShopStatsCRUD.getInstance().get().addPurchase(shopItem.getItemID());
     playerData.addPurchasedItem(shopItem, 1);
     PlayerDataManager.getInstance().update(playerData);
-    player.sendMessage(TextUtil.format("&3Purchased " + shopItem.getDisplayName() + " &3for &f&l" + price + "&3 credits."));
+    player.sendMessage(
+        TextUtil.format(
+            "&3Purchased " + shopItem.getDisplayName() + " &3for &f&l" + price + "&3 credits."));
     new EcoBitsAccount(player).remove(BigDecimal.valueOf(price));
   }
 }

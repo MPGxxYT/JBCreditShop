@@ -141,6 +141,8 @@ public final class Main extends JavaPlugin {
     getLogger().info(LABEL + " Enabled");
   }
 
+  //TODO: ADD README.md for instructions
+
   @Override
   public void onDisable() {
     getLogger().info(LABEL + " Disabled");

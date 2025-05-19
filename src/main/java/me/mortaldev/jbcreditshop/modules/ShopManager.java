@@ -77,6 +77,10 @@ public class ShopManager {
   }
 
   public ItemStack getShopMenuStack(Shop shop) {
+    return getShopMenuStack(shop, true);
+  }
+
+  public ItemStack getShopMenuStack(Shop shop, boolean clickPrompts) {
     ItemStackHelper.Builder builder =
         ItemStackHelper.builder(shop.getDefaultDisplayMaterial()).name(shop.getShopDisplay());
     builder
@@ -93,11 +97,14 @@ public class ShopManager {
     if (shop.getStyle() == Shop.Style.CUSTOM) {
       builder.addLore("&3&lSize: &f" + shop.getSize());
     }
-    builder
-        .addLore("")
-        .addLore("&7( left-click to view shop )")
-        .addLore("&7( middle-click to edit settings )")
-        .addLore("&7( right-click to edit )");
+    if (clickPrompts) {
+      builder
+          .addLore("")
+          .addLore("&7( left-click to view shop )")
+          .addLore("&7( middle-click to edit settings )")
+          .addLore("&7( right-click to edit )");
+    }
+
     return builder.build();
   }
 }

@@ -37,7 +37,9 @@ public class CreditShopCommand extends BaseCommand {
     }
     Shop shop = shopOptional.get();
     if (shop.isLocked() && !player.hasPermission("jbcreditshop.admin")) {
-      if (shop.getLockedBypassPermission().isBlank() || !player.hasPermission(shop.getLockedBypassPermission())) {
+      if (shop.getLockedBypassPermission() == null
+          || shop.getLockedBypassPermission().isBlank()
+          || !player.hasPermission(shop.getLockedBypassPermission())) {
         player.sendMessage(TextUtil.format("&cYou cannot access this shop."));
         Main.playDenySound(player);
         return;
@@ -53,5 +55,4 @@ public class CreditShopCommand extends BaseCommand {
     ShopItemsManager.getInstance().loadShopItems();
     player.sendMessage(TextUtil.format("&aReloaded! Check console for any errors if present."));
   }
-
 }

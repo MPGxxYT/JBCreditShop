@@ -139,25 +139,26 @@ public class ShopsMenu extends InventoryGUI {
                           String textEntry = stateSnapshot.getText();
                           textEntry = textEntry.trim();
                           if (textEntry.isBlank()) {
-                            player.sendMessage(
-                                "&cMust enter an id for the shop.");
+                            player.sendMessage("&cMust enter an id for the shop.");
                             Main.playDenySound(player);
-                            GUIManager.getInstance()
-                                .openGUI(new ShopsMenu(menuData), player);
+                            GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
                             return Collections.emptyList();
                           }
-                          Shop shop = Shop.builder().setShopID(textEntry)
-                              .setShopDisplay("&7" + textEntry)
-                              .setDefaultDisplayMaterial(Material.GOLD_INGOT)
-                              .setLocked(true)
-                              .build();
+                          textEntry = textEntry.toLowerCase().replaceAll("[^a-z0-9_]+", "_");
+                          Shop shop =
+                              Shop.builder()
+                                  .setShopID(textEntry)
+                                  .setShopDisplay("&7" + textEntry)
+                                  .setDefaultDisplayMaterial(Material.GOLD_INGOT)
+                                  .setLocked(true)
+                                  .build();
                           ShopManager shopManager = ShopManager.getInstance();
                           if (!shopManager.addShop(shop)) {
                             player.sendMessage(
-                                "&cShop with ID " + textEntry + " already exists.");
+                                TextUtil.format(
+                                    "&cShop with ID " + textEntry + " already exists."));
                             Main.playDenySound(player);
-                            GUIManager.getInstance()
-                                .openGUI(new ShopsMenu(menuData), player);
+                            GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
                             return Collections.emptyList();
                           }
                           shopManager.openShop(shop, player, true);
@@ -210,8 +211,7 @@ public class ShopsMenu extends InventoryGUI {
                     .open(player);
               } else if (event.isRightClick()) {
                 menuData.setSearchQuery("");
-                GUIManager.getInstance()
-                    .openGUI(new ShopsMenu(menuData), player);
+                GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
               }
             });
   }

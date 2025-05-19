@@ -18,6 +18,8 @@ public class ShopItem {
   private ConfigurationSection section;
   private String itemID = "";
   private String shopID = "";
+  private boolean useDisplayItemStack = false;
+  private ItemStack displayItemStack = null;
   private Material displayMaterial = null;
   private String displayName = "";
   private List<String> description = new ArrayList<>();
@@ -52,12 +54,10 @@ public class ShopItem {
     return section;
   }
 
-  public boolean canBeDisplayed() {
-    return visible
-        || purchasedCommand.isBlank()
-        || purchasedItem == null
-        || purchasedItem.getType().isAir()
-        || purchasedPermission.isBlank();
+  public boolean cannotBeDisplayed() {
+    return archived || (purchasedItem == null || purchasedItem.getType().isAir())
+        && (purchasedPermission == null || purchasedPermission.isBlank())
+        && ((purchasedCommand == null || purchasedCommand.isBlank()));
   }
 
   public static Builder builder() {
@@ -100,6 +100,10 @@ public class ShopItem {
     return locked;
   }
 
+  public int getRawPrice() {
+    return price;
+  }
+
   public int getPrice() {
     if (price < 0) {
       Optional<Shop> shop = ShopManager.getInstance().getShop(shopID);
@@ -120,12 +124,36 @@ public class ShopItem {
     return purchasedCommand;
   }
 
+  public ItemStack getDisplayItemStack() {
+    if (displayItemStack == null) {
+      return null;
+    }
+    return displayItemStack.clone();
+  }
+
+  public String getDisplayItemStackSerialized() {
+    if (displayItemStack == null || displayItemStack.getType().isAir()) {
+      return "";
+    }
+    return ItemStackHelper.serialize(displayItemStack.clone());
+  }
+
+  public boolean isUseDisplayItemStack() {
+    return useDisplayItemStack;
+  }
+
   public ItemStack getPurchasedItem() {
+    if (purchasedItem == null) {
+      return null;
+    }
     return purchasedItem;
   }
 
   public String getPurchasedItemSerialized() {
-    return ItemStackHelper.serialize(purchasedItem);
+    if (purchasedItem == null || purchasedItem.getType().isAir()) {
+      return "";
+    }
+    return ItemStackHelper.serialize(purchasedItem.clone());
   }
 
   public String getPermission() {
@@ -206,6 +234,11 @@ public class ShopItem {
       return this;
     }
 
+    public Builder setUseDisplayItemStack(boolean useDisplayItemStack) {
+      shopItem.useDisplayItemStack = useDisplayItemStack;
+      return this;
+    }
+
     public Builder setDisplayMaterial(String displayMaterial) {
       Material material = Material.matchMaterial(displayMaterial);
       if (material == null || material == Material.AIR) {
@@ -247,9 +280,17 @@ public class ShopItem {
     }
 
     public Builder setPurchasedItem(String purchasedItem) {
-      if (purchasedItem.isBlank()) return this;
+      if (purchasedItem.isBlank()) {
+        shopItem.purchasedItem = null;
+        return this;
+      }
       try {
-        shopItem.purchasedItem = ItemStackHelper.deserialize(purchasedItem);
+        ItemStack deserialize = ItemStackHelper.deserialize(purchasedItem);
+        if (deserialize.getType().isAir()) {
+          shopItem.purchasedItem = null;
+          return this;
+        }
+        shopItem.purchasedItem = deserialize;
       } catch (Exception e) {
         Main.warn("Invalid item '" + purchasedItem + "' for shopitem " + shopItem.itemID);
       }
@@ -257,7 +298,32 @@ public class ShopItem {
     }
 
     public Builder setPurchasedItem(ItemStack purchasedItem) {
+      if (purchasedItem == null || purchasedItem.getType().isAir()) {
+        return this;
+      }
       shopItem.purchasedItem = purchasedItem;
+      return this;
+    }
+
+    public Builder setDisplayItemStack(String displayItemStack) {
+      if (displayItemStack.isBlank()) return this;
+      try {
+        ItemStack deserialize = ItemStackHelper.deserialize(displayItemStack);
+        if (deserialize.getType().isAir()) {
+          return this;
+        }
+        shopItem.displayItemStack = deserialize;
+      } catch (Exception e) {
+        Main.warn("Invalid item '" + displayItemStack + "' for shopitem " + shopItem.itemID);
+      }
+      return this;
+    }
+
+    public Builder setDisplayItemStack(ItemStack displayItemStack) {
+      if (displayItemStack == null || displayItemStack.getType().isAir()) {
+        return this;
+      }
+      shopItem.displayItemStack = displayItemStack;
       return this;
     }
 

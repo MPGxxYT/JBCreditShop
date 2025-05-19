@@ -1,20 +1,19 @@
 package me.mortaldev.jbcreditshop.menus;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import me.mortaldev.jbcreditshop.Main;
+import me.mortaldev.jbcreditshop.modules.*;
+import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.menuapi.GUIManager;
 import me.mortaldev.menuapi.InventoryButton;
 import me.mortaldev.menuapi.InventoryGUI;
+import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
-import me.mortaldev.jbcreditshop.modules.Shop;
-import me.mortaldev.jbcreditshop.modules.ShopItem;
-import me.mortaldev.jbcreditshop.modules.ShopItemsManager;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
 import me.mortaldev.jbcreditshop.utils.Utils;
 
@@ -45,10 +44,10 @@ public class CustomStyleMenu extends InventoryGUI {
     return size;
   }
 
-  private int sortSlots() { //TODO: Fix bug related to doubled items
+  private int sortSlots() {
     Set<ShopItem> nonSlotted = new HashSet<>();
     for (ShopItem shopItem : shopItems) {
-      if (!shopItem.canBeDisplayed()) {
+      if (shopItem.cannotBeDisplayed() || !shopItem.isVisible()) {
         if (!adminMode) {
           continue;
         }
@@ -56,6 +55,7 @@ public class CustomStyleMenu extends InventoryGUI {
       int shopSlot = shopItem.getShopSlot();
       if (slotted.containsKey(shopSlot)) {
         nonSlotted.add(shopItem);
+        continue;
       }
       slotted.put(shopSlot, shopItem);
     }
@@ -78,7 +78,7 @@ public class CustomStyleMenu extends InventoryGUI {
     for (Map.Entry<Integer, ShopItem> entry : slotted.entrySet()) {
       int slot = entry.getKey();
       ShopItem shopItem = entry.getValue();
-      if (!shopItem.canBeDisplayed()) {
+      if (shopItem.cannotBeDisplayed() || !shopItem.isVisible()) {
         if (!adminMode) {
           continue;
         }
@@ -86,6 +86,58 @@ public class CustomStyleMenu extends InventoryGUI {
       addButton(slot, ShopItemButton(shopItem));
     }
     super.decorate(player);
+  }
+
+  @Override
+  public void onClick(InventoryClickEvent event) {
+    super.onClick(event);
+    if (!adminMode) {
+      return;
+    }
+    if (event.getView().getTopInventory() == event.getClickedInventory()) {
+      if (event.getCurrentItem() == null || event.getCurrentItem().getType().isAir()) {
+        Player player = (Player) event.getWhoClicked();
+        new AnvilGUI.Builder()
+            .plugin(Main.getInstance())
+            .title("Add Item")
+            .itemLeft(ItemStackHelper.builder(Material.PAPER).name("id").build())
+            .onClick(
+                (slot, stateSnapshot) -> {
+                  if (slot == 2) {
+                    String textEntry = stateSnapshot.getText();
+                    textEntry = textEntry.trim();
+                    if (textEntry.isBlank()) {
+                      player.sendMessage("&cMust enter an id for the item.");
+                      Main.playDenySound(player);
+                      ShopManager.getInstance().openShop(shop, player, true);
+                      return Collections.emptyList();
+                    }
+                    textEntry = textEntry.toLowerCase().replaceAll("[^a-z0-9_]+", "_");
+                    ShopItem shopItem =
+                        ShopItem.builder()
+                            .setItemID(textEntry)
+                            .setDisplayName("&7" + textEntry)
+                            .setDisplayMaterial(shop.getDefaultDisplayMaterial())
+                            .setPurchasedItem("")
+                            .setVisible(false)
+                            .setShopID(shop.getShopID())
+                            .setShopSlot(event.getSlot())
+                            .build();
+                    boolean b = ShopItemsManager.getInstance().addShopItem(shopItem);
+                    if (!b) {
+                      player.sendMessage(TextUtil.format("&cItem by ID already exists.!"));
+                      Main.playDenySound(player);
+                      GUIManager.getInstance()
+                          .openGUI(new CustomStyleMenu(shop, adminMode), player);
+                      return Collections.emptyList();
+                    }
+                    GUIManager.getInstance().openGUI(new ItemSettingsMenu(shop, shopItem), player);
+                  }
+                  return Collections.emptyList();
+                })
+            .open(player);
+      }
+    }
   }
 
   private InventoryButton ShopItemButton(ShopItem shopItem) {
@@ -96,12 +148,15 @@ public class CustomStyleMenu extends InventoryGUI {
             event -> {
               Player player = (Player) event.getWhoClicked();
               if (adminMode) {
-                GUIManager.getInstance().openGUI(new ItemSettingsMenu(shop, shopItem), player);
+                if (event.isRightClick()) {
+                  GUIManager.getInstance().openGUI(new ItemSettingsMenu(shop, shopItem), player);
+                }
                 return;
               }
               if (ShopItemsManager.getInstance().canAllowPurchase(shopItem, player)) {
                 ShopItemsManager.getInstance().purchaseShopItem(shopItem, player);
               }
+              GUIManager.getInstance().openGUI(new CustomStyleMenu(shop, false), player);
             });
   }
 }

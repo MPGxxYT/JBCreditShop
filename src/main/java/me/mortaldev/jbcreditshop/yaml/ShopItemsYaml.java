@@ -130,10 +130,6 @@ public class ShopItemsYaml {
           "ShopItem (ID: "
               + (shopItem.getItemID() != null ? shopItem.getItemID() : "N/A")
               + ") has a null section. Cannot save properly. It might need to be created first.");
-      // Optionally, attempt to create a section here if that's desired fallback behavior.
-      // For now, we rely on 'create' to set up the section.
-      // String newSectionKey = String.valueOf(findNextAvailableNumericKey(shopItem.getSource().key()));
-      // shopItem.setSection(shopItem.getSource().key().createSection(newSectionKey));
       return;
     }
 
@@ -232,6 +228,8 @@ public class ShopItemsYaml {
           {
             put("item_id", String.class);
             put("shop_id", String.class);
+            put("use_display_itemstack", Boolean.class);
+            put("display_itemstack", String.class); // Serialized ItemStack
             put("display_material", String.class);
             put("display_name", String.class);
             put("description", List.class);
@@ -268,6 +266,7 @@ public class ShopItemsYaml {
         put("group", shopItem::getGroup);
         put("permission", shopItem::getPermission);
         put("purchased_item", shopItem::getPurchasedItemSerialized);
+        put("display_itemstack", shopItem::getDisplayItemStackSerialized);
         put("purchased_command", shopItem::getPurchasedCommand);
         put("purchased_permission", shopItem::getPurchasedPermission);
         put("locked_reason", shopItem::getLockedReason);
@@ -293,6 +292,7 @@ public class ShopItemsYaml {
         put("archived", shopItem::isArchived);
         put("one_time_purchase", shopItem::isOneTimePurchase);
         put("allow_discount_stacking", shopItem::isAllowDiscountStacking);
+        put("use_display_itemstack", shopItem::isUseDisplayItemStack);
       }
     };
   }
@@ -307,6 +307,7 @@ public class ShopItemsYaml {
         put("archived", shopItemBuilder::setArchived);
         put("one_time_purchase", shopItemBuilder::setOneTimePurchase);
         put("allow_discount_stacking", shopItemBuilder::setAllowDiscountStacking);
+        put("use_display_itemstack", shopItemBuilder::setUseDisplayItemStack);
       }
     };
   }
@@ -321,6 +322,7 @@ public class ShopItemsYaml {
             put("archived", false);
             put("one_time_purchase", false);
             put("allow_discount_stacking", false);
+            put("use_display_itemstack", false);
           }
         };
     Map<String, Consumer<Boolean>> consumers = getBooleanConsumers(shopItemBuilder);
@@ -390,6 +392,7 @@ public class ShopItemsYaml {
             put("display_name", false);
             put("group", false);
             put("permission", false);
+            put("display_itemstack", false); // Can be null if it's a command item
             put("purchased_item", false); // Can be null if it's a command item
             put("purchased_command", false); // Can be null if it's an item giving item
             put("purchased_permission", false);
@@ -405,6 +408,7 @@ public class ShopItemsYaml {
             put("display_name", shopItemBuilder::setDisplayName);
             put("group", shopItemBuilder::setGroup);
             put("permission", shopItemBuilder::setPermission);
+            put("display_itemstack", shopItemBuilder::setDisplayItemStack);
             put("purchased_item", shopItemBuilder::setPurchasedItem);
             put("purchased_command", shopItemBuilder::setPurchasedCommand);
             put("purchased_permission", shopItemBuilder::setPurchasedPermission);
@@ -423,7 +427,9 @@ public class ShopItemsYaml {
           // Consider if to `return shopItemBuilder;` here to stop processing a critically flawed item
         }
         // For optional fields, if value is null/blank, we might skip or let builder handle defaults
-        if (value == null || value.isBlank()) continue;
+        if (value == null || value.isBlank()) {
+          continue;
+        }
       }
       consumers.get(key).accept(value);
     }

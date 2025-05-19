@@ -60,7 +60,8 @@ public class ShopSettingsMenu extends InventoryGUI {
     super.decorate(player);
   }
 
-  private InventoryButton DeleteButton() { //TODO: Delete confirmation menu with consumer
+  private InventoryButton
+      DeleteButton() {
     return new InventoryButton()
         .creator(
             player ->
@@ -73,8 +74,19 @@ public class ShopSettingsMenu extends InventoryGUI {
         .consumer(
             event -> {
               Player player = (Player) event.getWhoClicked();
-              ShopManager.getInstance().deleteShop(shop);
-              GUIManager.getInstance().openGUI(new ShopsMenu(new MenuData()), player);
+              ConfirmMenu confirmMenu =
+                  new ConfirmMenu(
+                      "Delete Shop? &l" + shop.getShopID(),
+                      ShopManager.getInstance().getShopMenuStack(shop, false),
+                      player1 -> {
+                        ShopManager.getInstance().deleteShop(shop);
+                        GUIManager.getInstance().openGUI(new ShopsMenu(new MenuData()), player);
+                      },
+                      player1 -> {
+                        GUIManager.getInstance()
+                            .openGUI(new ShopSettingsMenu(shop, adminMode), player);
+                      });
+              GUIManager.getInstance().openGUI(confirmMenu, player);
             });
   }
 
@@ -286,7 +298,7 @@ public class ShopSettingsMenu extends InventoryGUI {
                               if (slot == 2) {
                                 String textEntry = stateSnapshot.getText();
                                 textEntry = textEntry.trim();
-                                Pattern pattern = Pattern.compile("^\\d+$");
+                                Pattern pattern = Pattern.compile("^(?:100|[1-9]?\\d|0)$");
                                 Matcher matcher = pattern.matcher(textEntry);
                                 if (!matcher.matches()) {
                                   Main.playDenySound(player);
@@ -410,15 +422,20 @@ public class ShopSettingsMenu extends InventoryGUI {
               player.sendMessage(TextUtil.format("&3Enter the &fnew shop display&3: [30 seconds]"));
               player.closeInventory();
 
-              int task = Bukkit.getScheduler().scheduleSyncDelayedTask(Main.getInstance(), () -> {
-                if (ChatListener.hasConsumer(player.getUniqueId())) {
-                  ChatListener.removeConsumer(player.getUniqueId());
-                  player.sendMessage(TextUtil.format("&cTimed out!"));
-                  Main.playDenySound(player);
-                  GUIManager.getInstance()
-                      .openGUI(new ShopSettingsMenu(shop, adminMode), player);
-                }
-              }, 20L * 30);
+              int task =
+                  Bukkit.getScheduler()
+                      .scheduleSyncDelayedTask(
+                          Main.getInstance(),
+                          () -> {
+                            if (ChatListener.hasConsumer(player.getUniqueId())) {
+                              ChatListener.removeConsumer(player.getUniqueId());
+                              player.sendMessage(TextUtil.format("&cTimed out!"));
+                              Main.playDenySound(player);
+                              GUIManager.getInstance()
+                                  .openGUI(new ShopSettingsMenu(shop, adminMode), player);
+                            }
+                          },
+                          20L * 30);
               ChatListener.addConsumer(
                   player.getUniqueId(),
                   (message) -> {
