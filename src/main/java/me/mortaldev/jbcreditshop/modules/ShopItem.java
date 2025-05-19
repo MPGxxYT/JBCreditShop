@@ -3,15 +3,14 @@ package me.mortaldev.jbcreditshop.modules;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import org.bukkit.Material;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.inventory.ItemStack;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.records.Pair;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
+import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.inventory.ItemStack;
 
 public class ShopItem {
   private Pair<FileConfiguration, String> source;
@@ -55,9 +54,10 @@ public class ShopItem {
   }
 
   public boolean cannotBeDisplayed() {
-    return archived || (purchasedItem == null || purchasedItem.getType().isAir())
-        && (purchasedPermission == null || purchasedPermission.isBlank())
-        && ((purchasedCommand == null || purchasedCommand.isBlank()));
+    return archived
+        || (purchasedItem == null || purchasedItem.getType().isAir())
+            && (purchasedPermission == null || purchasedPermission.isBlank())
+            && ((purchasedCommand == null || purchasedCommand.isBlank()));
   }
 
   public static Builder builder() {

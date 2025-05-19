@@ -1,5 +1,8 @@
 package me.mortaldev.jbcreditshop.menus;
 
+import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.listeners.ChatListener;
 import me.mortaldev.jbcreditshop.modules.MenuData;
@@ -18,10 +21,6 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.Collections;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ShopSettingsMenu extends InventoryGUI {
 
@@ -60,8 +59,7 @@ public class ShopSettingsMenu extends InventoryGUI {
     super.decorate(player);
   }
 
-  private InventoryButton
-      DeleteButton() {
+  private InventoryButton DeleteButton() {
     return new InventoryButton()
         .creator(
             player ->

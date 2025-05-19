@@ -6,16 +6,15 @@ import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Default;
 import java.util.Optional;
-
-import me.mortaldev.jbcreditshop.modules.MenuData;
-import me.mortaldev.menuapi.GUIManager;
-import org.bukkit.entity.Player;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.menus.ShopsMenu;
+import me.mortaldev.jbcreditshop.modules.MenuData;
 import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.modules.ShopItemsManager;
 import me.mortaldev.jbcreditshop.modules.ShopManager;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
+import me.mortaldev.menuapi.GUIManager;
+import org.bukkit.entity.Player;
 
 @CommandAlias("crshop")
 public class CreditShopCommand extends BaseCommand {

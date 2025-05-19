@@ -4,10 +4,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.MenuData;
+import me.mortaldev.jbcreditshop.modules.Shop;
+import me.mortaldev.jbcreditshop.modules.ShopManager;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
+import me.mortaldev.jbcreditshop.utils.TextUtil;
+import me.mortaldev.jbcreditshop.utils.Utils;
 import me.mortaldev.menuapi.GUIManager;
 import me.mortaldev.menuapi.InventoryButton;
 import me.mortaldev.menuapi.InventoryGUI;
@@ -17,10 +20,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
-import me.mortaldev.jbcreditshop.modules.Shop;
-import me.mortaldev.jbcreditshop.modules.ShopManager;
-import me.mortaldev.jbcreditshop.utils.TextUtil;
-import me.mortaldev.jbcreditshop.utils.Utils;
 import org.bukkit.inventory.ItemStack;
 
 public class ShopsMenu extends InventoryGUI {

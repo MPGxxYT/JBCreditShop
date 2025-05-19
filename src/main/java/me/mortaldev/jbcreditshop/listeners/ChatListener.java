@@ -1,15 +1,14 @@
 package me.mortaldev.jbcreditshop.listeners;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
+import java.util.HashMap;
+import java.util.UUID;
+import java.util.function.Consumer;
 import me.mortaldev.jbcreditshop.Main;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-
-import java.util.HashMap;
-import java.util.UUID;
-import java.util.function.Consumer;
 
 public class ChatListener implements Listener {
   private static final HashMap<UUID, Consumer<Component>> consumers = new HashMap<>();
@@ -31,8 +30,7 @@ public class ChatListener implements Listener {
     UUID uuid = event.getPlayer().getUniqueId();
     if (consumers.containsKey(uuid)) {
       Bukkit.getScheduler()
-          .runTask(
-              Main.getInstance(), () -> consumers.remove(uuid).accept(event.message()));
+          .runTask(Main.getInstance(), () -> consumers.remove(uuid).accept(event.message()));
       event.setCancelled(true);
     }
   }

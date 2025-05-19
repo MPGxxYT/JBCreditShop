@@ -2,16 +2,15 @@ package me.mortaldev.jbcreditshop;
 
 import co.aikar.commands.PaperCommandManager;
 import com.google.common.collect.ImmutableList;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
-
+import me.mortaldev.jbcreditshop.commands.CreditShopCommand;
 import me.mortaldev.jbcreditshop.listeners.ChatListener;
-import me.mortaldev.jbcreditshop.modules.playerdata.PlayerData;
-import me.mortaldev.jbcreditshop.modules.playerdata.PlayerDataCRUD;
+import me.mortaldev.jbcreditshop.modules.Shop;
+import me.mortaldev.jbcreditshop.modules.ShopItemsManager;
+import me.mortaldev.jbcreditshop.modules.ShopManager;
 import me.mortaldev.jbcreditshop.modules.playerdata.PlayerDataManager;
 import me.mortaldev.jbcreditshop.modules.shopstats.ShopStatsCRUD;
 import me.mortaldev.jbcreditshop.modules.transaction.TransactionLogManager;
@@ -21,10 +20,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import me.mortaldev.jbcreditshop.commands.CreditShopCommand;
-import me.mortaldev.jbcreditshop.modules.Shop;
-import me.mortaldev.jbcreditshop.modules.ShopItemsManager;
-import me.mortaldev.jbcreditshop.modules.ShopManager;
 
 public final class Main extends JavaPlugin {
 
@@ -141,7 +136,7 @@ public final class Main extends JavaPlugin {
     getLogger().info(LABEL + " Enabled");
   }
 
-  //TODO: ADD README.md for instructions
+  // TODO: ADD README.md for instructions
 
   @Override
   public void onDisable() {

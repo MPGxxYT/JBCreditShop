@@ -2,23 +2,21 @@ package me.mortaldev.jbcreditshop.yaml;
 
 import java.io.File;
 import java.util.HashMap;
-
 import me.mortaldev.YAML;
-import org.bukkit.configuration.file.FileConfiguration;
 import me.mortaldev.jbcreditshop.Main;
+import org.bukkit.configuration.file.FileConfiguration;
 
 public class YamlReader {
-  
+
   private static class Singleton {
     private static final YamlReader INSTANCE = new YamlReader();
   }
-  
+
   public static synchronized YamlReader getInstance() {
     return Singleton.INSTANCE;
   }
-  
-  private YamlReader() {}
 
+  private YamlReader() {}
 
   public HashMap<FileConfiguration, String> getConfigs(String path) {
     File dir = new File(Main.getInstance().getDataFolder() + path);
@@ -42,5 +40,4 @@ public class YamlReader {
     Main.log("Found " + configs.size() + " config(s) in " + path);
     return configs;
   }
-  
 }

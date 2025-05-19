@@ -1,16 +1,15 @@
 package me.mortaldev.jbcreditshop.modules;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import me.mortaldev.jbcreditshop.Main;
+import me.mortaldev.jbcreditshop.records.Pair;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import me.mortaldev.jbcreditshop.Main;
-import me.mortaldev.jbcreditshop.records.Pair;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Shop {
   private Pair<FileConfiguration, String> source;
@@ -23,7 +22,9 @@ public class Shop {
   private boolean locked = true;
   private String lockedBypassPermission;
   private int discount;
-  private String discountGroup; // TODO: Turn discount + discountGroup into HashMap<String, Integer> as <Group, Discount> to allow for multiple discounts
+  private String
+      discountGroup; // TODO: Turn discount + discountGroup into HashMap<String, Integer> as <Group,
+                     // Discount> to allow for multiple discounts
   private Style style = Style.AUTO;
   private int size;
   private HashMap<Integer, String> filler;

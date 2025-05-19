@@ -1,5 +1,8 @@
 package me.mortaldev.jbcreditshop.menus;
 
+import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.modules.ShopItem;
@@ -14,11 +17,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-
-import java.util.Collections;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ItemPropertiesSettingsMenu extends InventoryGUI {
   private final Shop shop;
@@ -65,28 +63,38 @@ public class ItemPropertiesSettingsMenu extends InventoryGUI {
                 case RIGHT -> {
                   ShopItem newShopItem = shopItem.toBuilder().setGroup("").build();
                   ShopItemsManager.getInstance().updateShopItem(newShopItem);
-                  GUIManager.getInstance().openGUI(new ItemPropertiesSettingsMenu(shop, newShopItem), player);
+                  GUIManager.getInstance()
+                      .openGUI(new ItemPropertiesSettingsMenu(shop, newShopItem), player);
                 }
-                case LEFT -> new AnvilGUI.Builder()
-                    .plugin(Main.getInstance())
-                    .title("Group")
-                    .itemLeft(ItemStackHelper.builder(Material.CHEST).name(group.isBlank() ? " " : group).build())
-                    .onClick(
-                        (slot, stateSnapshot) -> {
-                          if (slot == 2) {
-                            String textEntry = stateSnapshot.getText();
-                            textEntry = textEntry.trim();
-                            if (textEntry.isBlank()) {
-                              GUIManager.getInstance().openGUI(new ItemPropertiesSettingsMenu(shop, shopItem), player);
+                case LEFT ->
+                    new AnvilGUI.Builder()
+                        .plugin(Main.getInstance())
+                        .title("Group")
+                        .itemLeft(
+                            ItemStackHelper.builder(Material.CHEST)
+                                .name(group.isBlank() ? " " : group)
+                                .build())
+                        .onClick(
+                            (slot, stateSnapshot) -> {
+                              if (slot == 2) {
+                                String textEntry = stateSnapshot.getText();
+                                textEntry = textEntry.trim();
+                                if (textEntry.isBlank()) {
+                                  GUIManager.getInstance()
+                                      .openGUI(
+                                          new ItemPropertiesSettingsMenu(shop, shopItem), player);
+                                  return Collections.emptyList();
+                                }
+                                ShopItem newShopItem =
+                                    shopItem.toBuilder().setGroup(textEntry).build();
+                                ShopItemsManager.getInstance().updateShopItem(newShopItem);
+                                GUIManager.getInstance()
+                                    .openGUI(
+                                        new ItemPropertiesSettingsMenu(shop, newShopItem), player);
+                              }
                               return Collections.emptyList();
-                            }
-                            ShopItem newShopItem = shopItem.toBuilder().setGroup(textEntry).build();
-                            ShopItemsManager.getInstance().updateShopItem(newShopItem);
-                            GUIManager.getInstance().openGUI(new ItemPropertiesSettingsMenu(shop, newShopItem), player);
-                          }
-                          return Collections.emptyList();
-                        })
-                    .open(player);
+                            })
+                        .open(player);
               }
             });
   }
@@ -102,7 +110,10 @@ public class ItemPropertiesSettingsMenu extends InventoryGUI {
                     .addLore("&7This is used for the OWNED sorting option.")
                     .addLore()
                     .addLore("&3Current:")
-                    .addLore(shopItem.getPermission().isBlank() ? "&f( NONE )" : "&f" +shopItem.getPermission())
+                    .addLore(
+                        shopItem.getPermission().isBlank()
+                            ? "&f( NONE )"
+                            : "&f" + shopItem.getPermission())
                     .addLore()
                     .addLore("&7( left-click to set )")
                     .addLore("&7( right-click to clear )")
@@ -114,28 +125,41 @@ public class ItemPropertiesSettingsMenu extends InventoryGUI {
                 case RIGHT -> {
                   ShopItem newShopItem = shopItem.toBuilder().setPermission("").build();
                   ShopItemsManager.getInstance().updateShopItem(newShopItem);
-                  GUIManager.getInstance().openGUI(new ItemPropertiesSettingsMenu(shop, newShopItem), player);
+                  GUIManager.getInstance()
+                      .openGUI(new ItemPropertiesSettingsMenu(shop, newShopItem), player);
                 }
-                case LEFT -> new AnvilGUI.Builder()
-                    .plugin(Main.getInstance())
-                    .title("Owned Permission")
-                    .itemLeft(ItemStackHelper.builder(Material.PAPER).name(shopItem.getPermission().isBlank() ? " " : shopItem.getPermission()).build())
-                    .onClick(
-                        (slot, stateSnapshot) -> {
-                          if (slot == 2) {
-                            String textEntry = stateSnapshot.getText();
-                            textEntry = textEntry.trim();
-                            if (textEntry.isBlank()) {
-                              GUIManager.getInstance().openGUI(new ItemPropertiesSettingsMenu(shop, shopItem), player);
+                case LEFT ->
+                    new AnvilGUI.Builder()
+                        .plugin(Main.getInstance())
+                        .title("Owned Permission")
+                        .itemLeft(
+                            ItemStackHelper.builder(Material.PAPER)
+                                .name(
+                                    shopItem.getPermission().isBlank()
+                                        ? " "
+                                        : shopItem.getPermission())
+                                .build())
+                        .onClick(
+                            (slot, stateSnapshot) -> {
+                              if (slot == 2) {
+                                String textEntry = stateSnapshot.getText();
+                                textEntry = textEntry.trim();
+                                if (textEntry.isBlank()) {
+                                  GUIManager.getInstance()
+                                      .openGUI(
+                                          new ItemPropertiesSettingsMenu(shop, shopItem), player);
+                                  return Collections.emptyList();
+                                }
+                                ShopItem newShopItem =
+                                    shopItem.toBuilder().setPermission(textEntry).build();
+                                ShopItemsManager.getInstance().updateShopItem(newShopItem);
+                                GUIManager.getInstance()
+                                    .openGUI(
+                                        new ItemPropertiesSettingsMenu(shop, newShopItem), player);
+                              }
                               return Collections.emptyList();
-                            }
-                            ShopItem newShopItem = shopItem.toBuilder().setPermission(textEntry).build();
-                            ShopItemsManager.getInstance().updateShopItem(newShopItem);
-                            GUIManager.getInstance().openGUI(new ItemPropertiesSettingsMenu(shop, newShopItem), player);
-                          }
-                          return Collections.emptyList();
-                        })
-                    .open(player);
+                            })
+                        .open(player);
               }
             });
   }
@@ -160,7 +184,10 @@ public class ItemPropertiesSettingsMenu extends InventoryGUI {
               new AnvilGUI.Builder()
                   .plugin(Main.getInstance())
                   .title("Sh")
-                  .itemLeft(ItemStackHelper.builder(Material.FLOWER_POT).name(shopItem.getShopSlot() + "").build())
+                  .itemLeft(
+                      ItemStackHelper.builder(Material.FLOWER_POT)
+                          .name(shopItem.getShopSlot() + "")
+                          .build())
                   .onClick(
                       (slot, stateSnapshot) -> {
                         if (slot == 2) {
@@ -171,19 +198,22 @@ public class ItemPropertiesSettingsMenu extends InventoryGUI {
                           if (!matcher.matches()) {
                             player.sendMessage(TextUtil.format("&cInvalid Number!"));
                             Main.playDenySound(player);
-                            GUIManager.getInstance().openGUI(new ItemPropertiesSettingsMenu(shop, shopItem), player);
+                            GUIManager.getInstance()
+                                .openGUI(new ItemPropertiesSettingsMenu(shop, shopItem), player);
                             return Collections.emptyList();
                           }
                           int shopSlot = Integer.parseInt(textEntry);
                           if (shopSlot < 0 || shopSlot > 53) {
                             player.sendMessage(TextUtil.format("&cInvalid Number!"));
                             Main.playDenySound(player);
-                            GUIManager.getInstance().openGUI(new ItemPropertiesSettingsMenu(shop, shopItem), player);
+                            GUIManager.getInstance()
+                                .openGUI(new ItemPropertiesSettingsMenu(shop, shopItem), player);
                             return Collections.emptyList();
                           }
                           ShopItem newShopItem = shopItem.toBuilder().setShopSlot(shopSlot).build();
                           ShopItemsManager.getInstance().updateShopItem(newShopItem);
-                          GUIManager.getInstance().openGUI(new ItemPropertiesSettingsMenu(shop, newShopItem), player);
+                          GUIManager.getInstance()
+                              .openGUI(new ItemPropertiesSettingsMenu(shop, newShopItem), player);
                         }
                         return Collections.emptyList();
                       })

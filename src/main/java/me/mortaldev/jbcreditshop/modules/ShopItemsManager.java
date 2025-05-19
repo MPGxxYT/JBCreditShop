@@ -5,10 +5,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-
+import me.mortaldev.jbcreditshop.Main;
+import me.mortaldev.jbcreditshop.ecobits.EcoBitsAccount;
+import me.mortaldev.jbcreditshop.modules.playerdata.PlayerData;
+import me.mortaldev.jbcreditshop.modules.playerdata.PlayerDataManager;
 import me.mortaldev.jbcreditshop.modules.shopstats.ShopStatsCRUD;
 import me.mortaldev.jbcreditshop.modules.transaction.TransactionLogManager;
 import me.mortaldev.jbcreditshop.modules.transaction.data.Transaction;
+import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
+import me.mortaldev.jbcreditshop.utils.TextUtil;
+import me.mortaldev.jbcreditshop.utils.Utils;
+import me.mortaldev.jbcreditshop.yaml.ShopItemsYaml;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
@@ -17,14 +24,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import me.mortaldev.jbcreditshop.Main;
-import me.mortaldev.jbcreditshop.ecobits.EcoBitsAccount;
-import me.mortaldev.jbcreditshop.modules.playerdata.PlayerData;
-import me.mortaldev.jbcreditshop.modules.playerdata.PlayerDataManager;
-import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
-import me.mortaldev.jbcreditshop.utils.TextUtil;
-import me.mortaldev.jbcreditshop.utils.Utils;
-import me.mortaldev.jbcreditshop.yaml.ShopItemsYaml;
 
 public class ShopItemsManager {
 

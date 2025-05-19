@@ -3,13 +3,12 @@ package me.mortaldev.jbcreditshop.modules.shopstats;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import me.mortaldev.jbcreditshop.Main;
-import me.mortaldev.jbcreditshop.modules.shopstats.data.ShopItemStat;
-import me.mortaldev.jbcreditshop.modules.shopstats.data.StatsHolder;
-
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
+import me.mortaldev.jbcreditshop.Main;
+import me.mortaldev.jbcreditshop.modules.shopstats.data.ShopItemStat;
+import me.mortaldev.jbcreditshop.modules.shopstats.data.StatsHolder;
 
 public record ShopStats(HashMap<LocalDate, StatsHolder> stats) {
   @JsonCreator

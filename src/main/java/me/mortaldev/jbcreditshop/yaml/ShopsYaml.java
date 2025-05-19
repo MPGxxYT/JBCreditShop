@@ -14,7 +14,6 @@ import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.records.Pair;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.inventory.ItemStack;
 
 public class ShopsYaml {
 

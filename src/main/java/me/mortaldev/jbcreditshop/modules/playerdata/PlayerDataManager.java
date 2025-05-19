@@ -15,6 +15,7 @@ public class PlayerDataManager extends CRUDManager<PlayerData> {
   }
 
   private PlayerDataManager() {}
+
   @Override
   public CRUD<PlayerData> getCRUD() {
     return PlayerDataCRUD.getInstance();

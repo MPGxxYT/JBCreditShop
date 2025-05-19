@@ -3,7 +3,6 @@ package me.mortaldev.jbcreditshop.modules.shopstats.data;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.HashSet;
 
 public record StatsHolder(HashSet<ShopItemStat> itemStats) {

@@ -19,7 +19,9 @@ import me.mortaldev.jbcreditshop.modules.ShopManager;
 import me.mortaldev.jbcreditshop.records.Pair;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-// Removed @NotNull as it's not used directly in the refined code's public API in a way that adds value over standard checks.
+
+// Removed @NotNull as it's not used directly in the refined code's public API in a way that adds
+// value over standard checks.
 
 public class ShopItemsYaml {
 
@@ -101,7 +103,8 @@ public class ShopItemsYaml {
       try {
         file.createNewFile();
       } catch (IOException e) {
-        throw new RuntimeException("Failed to create shop items file: " + file.getAbsolutePath(), e);
+        throw new RuntimeException(
+            "Failed to create shop items file: " + file.getAbsolutePath(), e);
       }
     }
 
@@ -174,11 +177,17 @@ public class ShopItemsYaml {
     // Resolve the parent Shop to determine context-dependent defaults (e.g., shop_slot)
     Optional<Shop> parentShopOpt = ShopManager.getInstance().getShop(shopItem.getShopID());
     if (parentShopOpt.isEmpty()) {
-      Main.warn("Parent shop with ID '" + shopItem.getShopID() + "' not found for ShopItem '" + shopItem.getItemID() + "'. Using default Shop settings for format.");
+      Main.warn(
+          "Parent shop with ID '"
+              + shopItem.getShopID()
+              + "' not found for ShopItem '"
+              + shopItem.getItemID()
+              + "'. Using default Shop settings for format.");
     }
     Shop parentShop = parentShopOpt.orElseGet(Shop::new); // Use a default shop if not found
 
-    Map<String, Class<?>> defaultFormat = getDefaultFormat(parentShop); // Get format based on actual/default parent shop
+    Map<String, Class<?>> defaultFormat =
+        getDefaultFormat(parentShop); // Get format based on actual/default parent shop
     HashMap<String, Supplier<Boolean>> booleanSuppliers = getBooleanSuppliers(shopItem);
     HashMap<String, Supplier<Integer>> integerSuppliers = getIntegerSuppliers(shopItem);
     HashMap<String, Supplier<String>> stringSuppliers = getStringSuppliers(shopItem);
@@ -189,11 +198,13 @@ public class ShopItemsYaml {
 
       try {
         if (clazz == Boolean.class) {
-          if (booleanSuppliers.containsKey(formatKey) && booleanSuppliers.get(formatKey).get() != null) {
+          if (booleanSuppliers.containsKey(formatKey)
+              && booleanSuppliers.get(formatKey).get() != null) {
             section.set(formatKey, booleanSuppliers.get(formatKey).get());
           }
         } else if (clazz == Integer.class) {
-          if (integerSuppliers.containsKey(formatKey) && integerSuppliers.get(formatKey).get() != null) {
+          if (integerSuppliers.containsKey(formatKey)
+              && integerSuppliers.get(formatKey).get() != null) {
             section.set(formatKey, integerSuppliers.get(formatKey).get());
           }
         } else if (clazz == List.class) {
@@ -203,21 +214,28 @@ public class ShopItemsYaml {
           }
           // Add other list properties here if any
         } else if (clazz == String.class) { // Explicitly String.class
-          if (stringSuppliers.containsKey(formatKey) && stringSuppliers.get(formatKey).get() != null) {
+          if (stringSuppliers.containsKey(formatKey)
+              && stringSuppliers.get(formatKey).get() != null) {
             section.set(formatKey, stringSuppliers.get(formatKey).get());
           }
         } else {
           // Fallback for other types, though getDefaultFormat should ideally cover all.
           // This was previously implicitly handling String, now String is explicit.
-          if (stringSuppliers.containsKey(formatKey) && stringSuppliers.get(formatKey).get() != null) {
-            if (formatKey.isBlank() && stringSuppliers.get(formatKey).get().isBlank()){
+          if (stringSuppliers.containsKey(formatKey)
+              && stringSuppliers.get(formatKey).get() != null) {
+            if (formatKey.isBlank() && stringSuppliers.get(formatKey).get().isBlank()) {
               continue;
             }
             section.set(formatKey, stringSuppliers.get(formatKey).get());
           }
         }
       } catch (NullPointerException e) {
-        Main.warn("Null value encountered from supplier for key '" + formatKey + "' in ShopItem '" + shopItem.getItemID() + "'. Skipping.");
+        Main.warn(
+            "Null value encountered from supplier for key '"
+                + formatKey
+                + "' in ShopItem '"
+                + shopItem.getItemID()
+                + "'. Skipping.");
       }
     }
   }
@@ -421,10 +439,12 @@ public class ShopItemsYaml {
       boolean isRequired = entry.getValue();
       String value = config.getString(key);
 
-      if (value == null || (isRequired && value.isBlank())) { // More precise check for required blank values
+      if (value == null
+          || (isRequired && value.isBlank())) { // More precise check for required blank values
         if (isRequired) {
           missingValueMessage(key, config.getName(), config.getString("item_id"));
-          // Consider if to `return shopItemBuilder;` here to stop processing a critically flawed item
+          // Consider if to `return shopItemBuilder;` here to stop processing a critically flawed
+          // item
         }
         // For optional fields, if value is null/blank, we might skip or let builder handle defaults
         if (value == null || value.isBlank()) {

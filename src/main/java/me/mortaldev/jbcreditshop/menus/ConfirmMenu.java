@@ -1,5 +1,6 @@
 package me.mortaldev.jbcreditshop.menus;
 
+import java.util.function.Consumer;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
 import me.mortaldev.menuapi.InventoryButton;
@@ -10,8 +11,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.function.Consumer;
-
 public class ConfirmMenu extends InventoryGUI {
 
   private final Consumer<Player> confirmConsumer;
@@ -19,7 +18,11 @@ public class ConfirmMenu extends InventoryGUI {
   private final ItemStack centerItem;
   private final String prompt;
 
-  public ConfirmMenu(String prompt, ItemStack centerItem, Consumer<Player> confirmConsumer, Consumer<Player> cancelConsumer) {
+  public ConfirmMenu(
+      String prompt,
+      ItemStack centerItem,
+      Consumer<Player> confirmConsumer,
+      Consumer<Player> cancelConsumer) {
     this.confirmConsumer = confirmConsumer;
     this.cancelConsumer = cancelConsumer;
     this.centerItem = centerItem;
@@ -33,10 +36,10 @@ public class ConfirmMenu extends InventoryGUI {
 
   @Override
   public void decorate(Player player) {
-    for(int i = 9; i <= 11; i++) {
+    for (int i = 9; i <= 11; i++) {
       addButton(i, CancelButton());
     }
-    for(int i = 15; i <= 17; i++) {
+    for (int i = 15; i <= 17; i++) {
       addButton(i, ConfirmButton());
     }
     getInventory().setItem(13, centerItem);

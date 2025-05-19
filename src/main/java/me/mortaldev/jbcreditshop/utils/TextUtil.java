@@ -3,18 +3,19 @@ package me.mortaldev.jbcreditshop.utils;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import me.mortaldev.jbcreditshop.Main;
+import me.mortaldev.jbcreditshop.records.Pair;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import me.mortaldev.jbcreditshop.Main;
-import me.mortaldev.jbcreditshop.records.Pair;
 
 public class TextUtil {
 
   /**
-   * Formats the given string by trimming, removing edge special characters, and replacing non-word characters with underscores.
+   * Formats the given string by trimming, removing edge special characters, and replacing non-word
+   * characters with underscores.
    *
    * @param string the input string to be formatted
    * @return the formatted string

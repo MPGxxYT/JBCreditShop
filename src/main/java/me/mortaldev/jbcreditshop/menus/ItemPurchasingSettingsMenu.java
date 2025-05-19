@@ -1,5 +1,6 @@
 package me.mortaldev.jbcreditshop.menus;
 
+import java.util.Collections;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.modules.ShopItem;
@@ -16,8 +17,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.Collections;
 
 public class ItemPurchasingSettingsMenu extends InventoryGUI {
   private final Shop shop;
@@ -105,7 +104,10 @@ public class ItemPurchasingSettingsMenu extends InventoryGUI {
                         .title("Purchased Permission")
                         .itemLeft(
                             ItemStackHelper.builder(Material.CONDUIT)
-                                .name(purchasedPermission == null || purchasedPermission.isBlank() ? " " : purchasedPermission)
+                                .name(
+                                    purchasedPermission == null || purchasedPermission.isBlank()
+                                        ? " "
+                                        : purchasedPermission)
                                 .build())
                         .onClick(
                             (slot, stateSnapshot) -> {
@@ -113,7 +115,8 @@ public class ItemPurchasingSettingsMenu extends InventoryGUI {
                                 String textEntry = stateSnapshot.getText();
                                 textEntry = textEntry.trim();
                                 if (textEntry.isBlank()) {
-                                  player.sendMessage(TextUtil.format("&cMust enter a permission for the item."));
+                                  player.sendMessage(
+                                      TextUtil.format("&cMust enter a permission for the item."));
                                   Main.playDenySound(player);
                                   GUIManager.getInstance()
                                       .openGUI(
@@ -174,7 +177,10 @@ public class ItemPurchasingSettingsMenu extends InventoryGUI {
                         .title("Purchased Command")
                         .itemLeft(
                             ItemStackHelper.builder(Material.PAPER)
-                                .name(purchasedCommand == null || purchasedCommand.isBlank() ? " " : purchasedCommand)
+                                .name(
+                                    purchasedCommand == null || purchasedCommand.isBlank()
+                                        ? " "
+                                        : purchasedCommand)
                                 .build())
                         .onClick(
                             (slot, stateSnapshot) -> {
@@ -182,7 +188,8 @@ public class ItemPurchasingSettingsMenu extends InventoryGUI {
                                 String textEntry = stateSnapshot.getText();
                                 textEntry = textEntry.trim();
                                 if (textEntry.isBlank()) {
-                                  player.sendMessage(TextUtil.format("&cMust enter a command for the item."));
+                                  player.sendMessage(
+                                      TextUtil.format("&cMust enter a command for the item."));
                                   Main.playDenySound(player);
                                   GUIManager.getInstance()
                                       .openGUI(

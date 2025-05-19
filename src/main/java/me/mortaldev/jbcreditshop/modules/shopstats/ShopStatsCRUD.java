@@ -1,12 +1,11 @@
 package me.mortaldev.jbcreditshop.modules.shopstats;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.util.HashMap;
 import me.mortaldev.crudapi.CRUDAdapters;
 import me.mortaldev.crudapi.SingleCRUD;
 import me.mortaldev.crudapi.handlers.Jackson;
 import me.mortaldev.jbcreditshop.Main;
-
-import java.util.HashMap;
 
 public class ShopStatsCRUD extends SingleCRUD<ShopStats> {
   private static final String PATH = Main.getInstance().getDataFolder() + "/plugin/";

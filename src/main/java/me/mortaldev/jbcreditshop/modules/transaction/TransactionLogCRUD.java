@@ -20,6 +20,7 @@ public class TransactionLogCRUD extends CRUD<TransactionLog> {
   private TransactionLogCRUD() {
     super(Jackson.getInstance());
   }
+
   @Override
   public Class<TransactionLog> getClazz() {
     return TransactionLog.class;

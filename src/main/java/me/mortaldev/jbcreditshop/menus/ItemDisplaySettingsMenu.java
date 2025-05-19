@@ -1,11 +1,14 @@
 package me.mortaldev.jbcreditshop.menus;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.listeners.ChatListener;
 import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.modules.ShopItem;
 import me.mortaldev.jbcreditshop.modules.ShopItemsManager;
-import me.mortaldev.jbcreditshop.modules.ShopManager;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
 import me.mortaldev.jbcreditshop.utils.Utils;
@@ -18,11 +21,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 public class ItemDisplaySettingsMenu extends InventoryGUI {
   private final Shop shop;
@@ -60,7 +58,11 @@ public class ItemDisplaySettingsMenu extends InventoryGUI {
                       .addLore("&7to match this to it.")
                       .addLore();
               ItemStack displayItemStack = shopItem.getDisplayItemStack();
-              builder.addLore("&3Current: " + (displayItemStack == null ? "&fNone" : "&aSet:&f " + Utils.itemName(displayItemStack)));
+              builder.addLore(
+                  "&3Current: "
+                      + (displayItemStack == null
+                          ? "&fNone"
+                          : "&aSet:&f " + Utils.itemName(displayItemStack)));
               if (displayItemStack != null) {
                 builder.addLore(
                     "&3Display As Item Stack: "
@@ -133,7 +135,8 @@ public class ItemDisplaySettingsMenu extends InventoryGUI {
         .consumer(
             event -> {
               Player player = (Player) event.getWhoClicked();
-              player.sendMessage(TextUtil.format("&3Enter a display name for this item: &f[30 seconds]"));
+              player.sendMessage(
+                  TextUtil.format("&3Enter a display name for this item: &f[30 seconds]"));
               player.closeInventory();
               int task =
                   Bukkit.getScheduler()
@@ -183,7 +186,9 @@ public class ItemDisplaySettingsMenu extends InventoryGUI {
         .consumer(
             event -> {
               Player player = (Player) event.getWhoClicked();
-              player.sendMessage(TextUtil.format("&3Enter a description for this item (use ';;' between lines): &f[30 seconds]"));
+              player.sendMessage(
+                  TextUtil.format(
+                      "&3Enter a description for this item (use ';;' between lines): &f[30 seconds]"));
               player.closeInventory();
               int task =
                   Bukkit.getScheduler()

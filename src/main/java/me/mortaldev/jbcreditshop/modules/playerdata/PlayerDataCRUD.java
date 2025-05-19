@@ -20,7 +20,6 @@ public class PlayerDataCRUD extends CRUD<PlayerData> {
     super(Jackson.getInstance());
   }
 
-
   @Override
   public Class<PlayerData> getClazz() {
     return PlayerData.class;

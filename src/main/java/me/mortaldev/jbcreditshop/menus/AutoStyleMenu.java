@@ -2,10 +2,13 @@ package me.mortaldev.jbcreditshop.menus;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
+import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.*;
 import me.mortaldev.jbcreditshop.modules.playerdata.PlayerData;
 import me.mortaldev.jbcreditshop.modules.playerdata.PlayerDataManager;
+import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
+import me.mortaldev.jbcreditshop.utils.TextUtil;
+import me.mortaldev.jbcreditshop.utils.Utils;
 import me.mortaldev.menuapi.GUIManager;
 import me.mortaldev.menuapi.InventoryButton;
 import me.mortaldev.menuapi.InventoryGUI;
@@ -16,10 +19,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import me.mortaldev.jbcreditshop.Main;
-import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
-import me.mortaldev.jbcreditshop.utils.TextUtil;
-import me.mortaldev.jbcreditshop.utils.Utils;
 
 public class AutoStyleMenu extends InventoryGUI {
 
@@ -283,7 +282,7 @@ public class AutoStyleMenu extends InventoryGUI {
                           ShopItem shopItem =
                               ShopItem.builder()
                                   .setItemID(textEntry)
-                                  .setDisplayName("&7"+textEntry)
+                                  .setDisplayName("&7" + textEntry)
                                   .setDisplayMaterial(shop.getDefaultDisplayMaterial())
                                   .setPurchasedItem("")
                                   .setVisible(false)

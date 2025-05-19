@@ -1,10 +1,11 @@
 package me.mortaldev.jbcreditshop.menus;
 
 import java.util.*;
-
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.*;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
+import me.mortaldev.jbcreditshop.utils.TextUtil;
+import me.mortaldev.jbcreditshop.utils.Utils;
 import me.mortaldev.menuapi.GUIManager;
 import me.mortaldev.menuapi.InventoryButton;
 import me.mortaldev.menuapi.InventoryGUI;
@@ -14,8 +15,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
-import me.mortaldev.jbcreditshop.utils.TextUtil;
-import me.mortaldev.jbcreditshop.utils.Utils;
 
 public class CustomStyleMenu extends InventoryGUI {
 

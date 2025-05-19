@@ -3,13 +3,13 @@ package me.mortaldev.jbcreditshop.modules;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import me.mortaldev.menuapi.GUIManager;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import me.mortaldev.jbcreditshop.menus.AutoStyleMenu;
 import me.mortaldev.jbcreditshop.menus.CustomStyleMenu;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.jbcreditshop.yaml.ShopsYaml;
+import me.mortaldev.menuapi.GUIManager;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class ShopManager {
 
