@@ -1,10 +1,8 @@
 package me.mortaldev.jbcreditshop.commands;
 
 import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.CommandAlias;
-import co.aikar.commands.annotation.CommandCompletion;
-import co.aikar.commands.annotation.CommandPermission;
-import co.aikar.commands.annotation.Default;
+import co.aikar.commands.annotation.*;
+
 import java.util.Optional;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.menus.ShopsMenu;
@@ -14,9 +12,10 @@ import me.mortaldev.jbcreditshop.modules.ShopItemsManager;
 import me.mortaldev.jbcreditshop.modules.ShopManager;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
 import me.mortaldev.menuapi.GUIManager;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@CommandAlias("crshop")
+@CommandAlias("creditshop|crshop")
 public class CreditShopCommand extends BaseCommand {
 
   @Default
@@ -25,7 +24,7 @@ public class CreditShopCommand extends BaseCommand {
     GUIManager.getInstance().openGUI(new ShopsMenu(new MenuData()), player);
   }
 
-  @CommandAlias("open")
+  @Subcommand("open")
   @CommandCompletion("@shops")
   public void openShop(Player player, String shopID) {
     Optional<Shop> shopOptional = ShopManager.getInstance().getShop(shopID);
@@ -47,11 +46,11 @@ public class CreditShopCommand extends BaseCommand {
     ShopManager.getInstance().openShop(shop, player, false);
   }
 
-  @CommandAlias("reload")
+  @Subcommand("reload")
   @CommandPermission("jbcreditshop.admin")
-  public void reload(Player player) {
+  public void reload(CommandSender sender) {
     ShopManager.getInstance().loadShops();
     ShopItemsManager.getInstance().loadShopItems();
-    player.sendMessage(TextUtil.format("&aReloaded! Check console for any errors if present."));
+    sender.sendMessage("Reloaded! Check console for any errors if present.");
   }
 }
