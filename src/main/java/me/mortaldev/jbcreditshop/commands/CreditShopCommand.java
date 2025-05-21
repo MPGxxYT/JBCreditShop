@@ -15,7 +15,7 @@ import me.mortaldev.menuapi.GUIManager;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-@CommandAlias("jbcrshop")
+@CommandAlias("creditshop|crshop")
 public class CreditShopCommand extends BaseCommand {
 
   @Default
