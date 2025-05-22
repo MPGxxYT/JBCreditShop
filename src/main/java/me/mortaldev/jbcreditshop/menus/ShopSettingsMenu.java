@@ -80,10 +80,8 @@ public class ShopSettingsMenu extends InventoryGUI {
                         ShopManager.getInstance().deleteShop(shop);
                         GUIManager.getInstance().openGUI(new ShopsMenu(new MenuData()), player);
                       },
-                      player1 -> {
-                        GUIManager.getInstance()
-                            .openGUI(new ShopSettingsMenu(shop, adminMode), player);
-                      });
+                      player1 -> GUIManager.getInstance()
+                          .openGUI(new ShopSettingsMenu(shop, adminMode), player));
               GUIManager.getInstance().openGUI(confirmMenu, player);
             });
   }
@@ -119,9 +117,7 @@ public class ShopSettingsMenu extends InventoryGUI {
                 Shop newShop = shop;
                 switch (style) {
                   case CUSTOM -> newShop = shop.toBuilder().setStyleAsEnum(Shop.Style.AUTO).build();
-                  case AUTO -> {
-                    newShop = shop.toBuilder().setStyleAsEnum(Shop.Style.CUSTOM).setSize(1).build();
-                  }
+                  case AUTO -> newShop = shop.toBuilder().setStyleAsEnum(Shop.Style.CUSTOM).setSize(1).build();
                 }
                 ShopManager.getInstance().updateShop(newShop);
                 GUIManager.getInstance().openGUI(new ShopSettingsMenu(newShop, adminMode), player);
@@ -376,7 +372,7 @@ public class ShopSettingsMenu extends InventoryGUI {
                       (slot, stateSnapshot) -> {
                         if (slot == 2) {
                           String textEntry = stateSnapshot.getText();
-                          textEntry = textEntry.trim();
+                          textEntry = textEntry.trim().toUpperCase().replaceAll(" ", "_");
                           try {
                             Material material = Material.valueOf(textEntry);
                             Shop newShop =

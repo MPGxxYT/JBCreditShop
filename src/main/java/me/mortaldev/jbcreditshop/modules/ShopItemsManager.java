@@ -1,10 +1,9 @@
 package me.mortaldev.jbcreditshop.modules;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.text.NumberFormat;
+import java.util.*;
+
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.ecobits.EcoBitsAccount;
 import me.mortaldev.jbcreditshop.modules.playerdata.PlayerData;
@@ -75,6 +74,10 @@ public class ShopItemsManager {
     return getShopMenuStack(shopItem, adminMode, player, true);
   }
 
+  private String formatPrice(int price) {
+    return NumberFormat.getNumberInstance(Locale.US).format(price);
+  }
+
   public ItemStack getShopMenuStack(
       ShopItem shopItem, boolean adminMode, Player player, boolean displayPrompt) {
     Material display = shopItem.getDisplayMaterial();
@@ -101,11 +104,12 @@ public class ShopItemsManager {
           .addLore("&3&lID: &f" + shopItem.getItemID())
           .addLore("&3&lShop ID: &f" + shopItem.getShopID());
     }
+    String formattedPrice = formatPrice(shopItem.getPrice());
     if (adminMode) {
       builder
           .addLore("&3&lLocked: &f" + shopItem.isLocked())
           .addLore("&3&lVisible: &f" + shopItem.isVisible())
-          .addLore("&3&lPrice: &f" + shopItem.getPrice())
+          .addLore("&3&lPrice: &f" + formattedPrice)
           .addLore("&3&lDiscount: &f" + shopItem.getDiscount() + "%")
           .addLore("")
           .addLore("&7( right-click to modify )");
@@ -120,11 +124,11 @@ public class ShopItemsManager {
           } else if (shopItem.getDiscount() > 0) {
             applyDiscountText(shopItem, shop, builder);
           } else {
-            builder.addLore("&3&lPrice: &f" + shopItem.getPrice());
+            builder.addLore("&3&lPrice: &f" + formattedPrice);
           }
         }
       } else {
-        builder.addLore("&3&lPrice: &f" + shopItem.getPrice());
+        builder.addLore("&3&lPrice: &f" + formattedPrice);
       }
       if (displayPrompt) {
         if (shopItem.isLocked()) {
@@ -164,7 +168,11 @@ public class ShopItemsManager {
     builder
         .addLore("&e&l SALE! &e&n" + discountPercent + "&l%&e off!")
         .addLore()
-        .addLore("&3&lPrice: &7&m" + shopItem.getPrice() + "&r &e&l" + discountPrice);
+        .addLore(
+            "&3&lPrice: &7&m"
+                + formatPrice(shopItem.getPrice())
+                + "&r &e&l"
+                + formatPrice(discountPrice));
   }
 
   public double getDiscountPercent(ShopItem shopItem) {
