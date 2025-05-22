@@ -187,7 +187,7 @@ public class ShopItem {
   }
 
   public String getDisplayMaterialAsString() {
-    return displayMaterial.getKey().toString();
+    return displayMaterial.name();
   }
 
   public String getShopID() {

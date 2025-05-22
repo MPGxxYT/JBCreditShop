@@ -65,7 +65,7 @@ public class Shop {
   }
 
   public String getDefaultDisplayMaterialAsString() {
-    return defaultDisplayMaterial.toString();
+    return defaultDisplayMaterial.name();
   }
 
   public boolean isLocked() {
