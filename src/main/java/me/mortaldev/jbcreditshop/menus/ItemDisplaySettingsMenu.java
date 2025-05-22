@@ -245,7 +245,7 @@ public class ItemDisplaySettingsMenu extends InventoryGUI {
                       (slot, stateSnapshot) -> {
                         if (slot == 2) {
                           String textEntry = stateSnapshot.getText();
-                          textEntry = textEntry.trim();
+                          textEntry = textEntry.trim().toUpperCase().replaceAll(" ", "_");
                           try {
                             Material material = Material.valueOf(textEntry);
                             ShopItem newShopItem =

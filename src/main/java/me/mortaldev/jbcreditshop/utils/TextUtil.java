@@ -132,118 +132,248 @@ public class TextUtil {
    * @return the plain text string representation of the Component object without formatting tags
    */
   public static String deformat(Component component) {
-    String str = MiniMessage.miniMessage().serialize(component).replaceFirst("<!italic>", "");
-    // Bukkit.broadcastMessage(str);
-    StringBuilder stringBuilder = new StringBuilder(str);
-    stringBuilder.replace(0, stringBuilder.length(), str.replace("<newline>", "&nl"));
+    String miniMessageStr = MiniMessage.miniMessage().serialize(component);
+    //    System.out.println("miniMessageStr = " + miniMessageStr);
 
-    // Replace denied color format references
-    for (Colors color : Colors.values()) {
-      String valueEnd = "</" + color.getValue() + ">";
-      String offValue = "<!" + color.getValue() + ">";
-      String offValueEnd = "</!" + color.getValue() + ">";
-      stringBuilder.replace(
-          0,
-          stringBuilder.length(),
-          stringBuilder
-              .toString()
-              .replace(offValue, "")
-              .replace(offValueEnd, "")
-              .replace(valueEnd, ""));
+    StringBuilder legacyResult = new StringBuilder();
+
+    // Style state trackers for the *last emitted* legacy codes
+    String lastEmittedLegacyColorKey = "f"; // Default Minecraft white's key
+    EnumSet<Decorations> lastEmittedDecorations = EnumSet.noneOf(Decorations.class);
+
+    // Style stack for MiniMessage processing
+    Deque<String> colorTagStack =
+        new ArrayDeque<>(); // Stores MiniMessage color tags like "<gray>", "<#RRGGBB>"
+    colorTagStack.push("<white>"); // Base default color
+
+    // Current decoration states based on MiniMessage tags encountered
+    Map<Decorations, Boolean> currentDecorationStates = new EnumMap<>(Decorations.class);
+    for (Decorations d : Decorations.values()) {
+      // Set initial decoration states (e.g., italic is often false by default in Components)
+      currentDecorationStates.put(d, false);
     }
 
-    // Replace color format references
-    for (Colors color : Colors.values()) {
-      String key = "&" + color.getKey();
-      String value = "<" + color.getValue() + ">";
-      stringBuilder.replace(
-          0, stringBuilder.length(), stringBuilder.toString().replace(value, key));
-    }
+    // Regex to find tags or text: group 1 is tag, group 2 is text
+    Pattern pattern = Pattern.compile("(<[^>]+>)|([^<]+)");
+    Matcher matcher = pattern.matcher(miniMessageStr);
 
-    // Replace denied decoration format references
-    for (Decorations decoration : Decorations.values()) {
-      String valueEnd = "</" + decoration.getValue() + ">";
-      String offValue = "<!" + decoration.getValue() + ">";
-      String offValueEnd = "</!" + decoration.getValue() + ">";
-      stringBuilder.replace(
-          0,
-          stringBuilder.length(),
-          stringBuilder
-              .toString()
-              .replace(offValue, "")
-              .replace(offValueEnd, "")
-              .replace(valueEnd, ""));
-    }
+    while (matcher.find()) {
+      String tag = matcher.group(1);
+      String text = matcher.group(2);
 
-    // Replace decoration format references
-    for (Decorations decoration : Decorations.values()) {
-      String key = "&" + decoration.getKey();
-      String value = "<" + decoration.getValue() + ">";
-      stringBuilder.replace(
-          0, stringBuilder.length(), stringBuilder.toString().replace(value, key));
-    }
+      if (tag != null) {
+        // --- Process MiniMessage Tag and Update Style Stack/State ---
+        boolean isColorTag = false;
+        boolean isDecorationTag = false;
 
-    // Move decorations to correct position
-    for (Decorations decoration : Decorations.values()) {
-      String key = "&" + decoration.getKey();
-      if (stringContainsAhead(stringBuilder, key, "<#")) {
-        stringBuilder = moveCharsForward(stringBuilder, key, 9);
-      } else {
-        stringBuilder = moveCharsForward(stringBuilder, key, 2);
-      }
-    }
-
-    // Parse and replace HTML-style hexadecimal color references.
-    Pattern hexPattern = Pattern.compile("<#(.{6})>");
-    Matcher hexMatcher = hexPattern.matcher(str);
-    // <#ffffff> to &#ffffff
-    while (hexMatcher.find()) {
-      String hexCode = hexMatcher.group(1);
-      String key = "&#" + hexCode;
-      String value = "<#" + hexCode + ">";
-      String valueEnd = "</#" + hexCode + ">";
-      stringBuilder.replace(
-          0,
-          stringBuilder.length(),
-          stringBuilder.toString().replace(value, key).replace(valueEnd, ""));
-    }
-
-    return stringBuilder.toString();
-  }
-
-  private static boolean stringContainsAhead(StringBuilder str, String target, String special) {
-    int i = 0;
-    while (i < str.length()) {
-      int specialIndexSize = i + target.length() + special.length();
-      if (specialIndexSize <= str.length()
-          && str.substring(i, target.length() + i).equals(target)
-          && str.substring(i + target.length(), specialIndexSize).equals(special)) {
-        return true;
-      }
-      i++;
-    }
-    return false;
-  }
-
-  private static StringBuilder moveCharsForward(StringBuilder str, String target, int steps) {
-    StringBuilder newStr = new StringBuilder();
-    int i = 0;
-    while (i < str.length()) {
-      if (i <= str.length() - target.length()
-          && str.substring(i, i + target.length()).toString().equals(target)) {
-        if (i + target.length() + steps <= str.length()) {
-          newStr.append(str, i + target.length(), i + target.length() + steps);
-          newStr.append(target);
-          i += target.length() + steps;
+        // 1. Handle Color Tags (and stack)
+        if (tag.matches("<#[0-9a-fA-F]{6}>")) { // Hex color open: <#RRGGBB>
+          colorTagStack.push(tag);
+          isColorTag = true;
+        } else if (tag.matches("</#[0-9a-fA-F]{6}>")) { // Hex color close: </#RRGGBB>
+          if (colorTagStack.size() > 1) colorTagStack.pop(); // Don't pop the base default
+          isColorTag = true;
         } else {
-          newStr.append(target);
-          i += target.length();
+          for (Colors c : Colors.values()) {
+            if (tag.equals("<" + c.getValue() + ">")) { // Named color open: <gray>
+              colorTagStack.push(tag);
+              isColorTag = true;
+              break;
+            } else if (tag.equals("</" + c.getValue() + ">")) { // Named color close: </gray>
+              if (colorTagStack.size() > 1) colorTagStack.pop();
+              isColorTag = true;
+              break;
+            }
+          }
         }
-      } else {
-        newStr.append(str.charAt(i++));
+        if (tag.equals("</color>")) { // Generic color closing tag
+          if (colorTagStack.size() > 1) colorTagStack.pop();
+          isColorTag = true;
+        }
+
+        // 2. Handle Decoration Tags
+        for (Decorations d : Decorations.values()) {
+          if (tag.equals("<" + d.getValue() + ">")) { // <bold>, <italic>, <reset>
+            currentDecorationStates.put(d, true);
+            if (d == Decorations.RESET) {
+              // Reset all other decorations and color stack
+              for (Decorations dReset : Decorations.values()) {
+                currentDecorationStates.put(dReset, false); // Clear all
+              }
+              currentDecorationStates.put(Decorations.RESET, true); // Mark reset as active
+              colorTagStack.clear();
+              colorTagStack.push("<white>"); // Reset color to white
+            }
+            isDecorationTag = true;
+            break;
+          } else if (tag.equals("</" + d.getValue() + ">")) { // </bold>, </italic>
+            // This implies the decoration should revert to its state before the opening tag.
+            // For simplicity with legacy, we often just turn it off if not explicitly re-enabled.
+            // MiniMessage usually makes the new state explicit with <!false_tag> or a new
+            // <true_tag>.
+            currentDecorationStates.put(d, false);
+            isDecorationTag = true;
+            break;
+          } else if (tag.equals("<!" + d.getValue() + ">")) { // <!bold>, <!italic> (set to false)
+            currentDecorationStates.put(d, false);
+            // If this was <!reset>, it means "reset is false", which is the normal state.
+            if (d == Decorations.RESET) currentDecorationStates.put(d, false);
+            isDecorationTag = true;
+            break;
+          }
+        }
+        // Note: Tags like </!obfuscated> are non-standard MiniMessage and would need special
+        // handling
+        // if they appear. They are ignored here.
+
+      } else if (text != null && !text.isEmpty()) {
+        // --- This is a Text Segment: Generate Legacy Codes ---
+        String currentMiniMessageColorTag = colorTagStack.peek(); // Should not be empty due to base
+        String targetLegacyColorKey =
+            convertMiniMessageColorToLegacyKey(currentMiniMessageColorTag);
+
+        EnumSet<Decorations> targetDecorations = EnumSet.noneOf(Decorations.class);
+        boolean resetApplied = false;
+        if (currentDecorationStates.getOrDefault(Decorations.RESET, false)) {
+          targetDecorations.add(Decorations.RESET);
+          resetApplied = true;
+        } else {
+          for (Map.Entry<Decorations, Boolean> entry : currentDecorationStates.entrySet()) {
+            if (entry.getValue() && entry.getKey() != Decorations.RESET) {
+              targetDecorations.add(entry.getKey());
+            }
+          }
+        }
+
+        // Compare target style with lastEmittedStyle and append changes
+        if (resetApplied) {
+          // If reset was just activated
+          if (!lastEmittedDecorations.contains(Decorations.RESET)) {
+            legacyResult.append("&r");
+          }
+          lastEmittedLegacyColorKey =
+              getDefaultLegacyColorKey(); // &r resets to default (e.g., white)
+          lastEmittedDecorations.clear();
+          lastEmittedDecorations.add(Decorations.RESET);
+
+          // If the target color after reset is not the default, apply it
+          if (!targetLegacyColorKey.equals(lastEmittedLegacyColorKey)) {
+            legacyResult.append(convertLegacyColorKeyToCode(targetLegacyColorKey));
+            lastEmittedLegacyColorKey = targetLegacyColorKey;
+          }
+          // Apply any decorations that are true *after* reset (should be none if only <reset> was
+          // seen)
+          // This part handles if <reset><bold>TEXT which becomes &r&lTEXT
+          for (Decorations deco : targetDecorations) {
+            if (deco != Decorations.RESET) { // RESET is already handled by &r
+              legacyResult.append("&").append(deco.getKey());
+              lastEmittedDecorations.add(deco); // Track it
+            }
+          }
+
+        } else { // Not a reset context
+          boolean colorActuallyChanged = !targetLegacyColorKey.equals(lastEmittedLegacyColorKey);
+
+          if (colorActuallyChanged) {
+            legacyResult.append(convertLegacyColorKeyToCode(targetLegacyColorKey));
+            lastEmittedLegacyColorKey = targetLegacyColorKey;
+            lastEmittedDecorations.clear(); // Color change resets decorations
+
+            // Apply all target decorations
+            for (Decorations deco : targetDecorations) {
+              legacyResult.append("&").append(deco.getKey());
+              lastEmittedDecorations.add(deco);
+            }
+          } else {
+            // Color is the same as last emitted. Check for decoration changes.
+            EnumSet<Decorations> decosToTurnOn = EnumSet.copyOf(targetDecorations);
+            decosToTurnOn.removeAll(
+                lastEmittedDecorations); // Decorations that are now true but were false
+
+            EnumSet<Decorations> decosToTurnOff = EnumSet.copyOf(lastEmittedDecorations);
+            decosToTurnOff.removeAll(targetDecorations);
+            decosToTurnOff.remove(Decorations.RESET); // RESET is handled by its own block
+
+            if (!decosToTurnOff.isEmpty()) {
+              // **CRUCIAL CHANGE HERE:** A decoration needs to be turned OFF, and color is the
+              // same.
+              // To reliably turn off decorations (especially if re-applying same color doesn't
+              // work),
+              // use &r, then re-apply the target color and all target decorations.
+              legacyResult.append("&r");
+              lastEmittedLegacyColorKey =
+                  getDefaultLegacyColorKey(); // Color is now default (e.g., "f")
+              lastEmittedDecorations.clear();
+              lastEmittedDecorations.add(Decorations.RESET); // Mark that &r was applied
+
+              // Re-apply the target color if it's not the default color that &r already set
+              if (!targetLegacyColorKey.equals(lastEmittedLegacyColorKey)) {
+                legacyResult.append(convertLegacyColorKeyToCode(targetLegacyColorKey));
+                lastEmittedLegacyColorKey = targetLegacyColorKey;
+                // After a color code, legacy decorations are reset, so clear from our tracking
+                // (except RESET itself which is now 'off' effectively by the color)
+                lastEmittedDecorations.remove(Decorations.RESET);
+              }
+
+              // Apply ALL decorations that should be active for this segment
+              for (Decorations deco :
+                  targetDecorations) { // targetDecorations contains only what should be TRUE
+                if (deco != Decorations.RESET) { // RESET state is already handled
+                  legacyResult.append("&").append(deco.getKey());
+                  lastEmittedDecorations.add(deco);
+                }
+              }
+            } else if (!decosToTurnOn.isEmpty()) {
+              // No decorations to turn OFF, only new ones to turn ON. Color is the same.
+              // This case is simpler: just append the new decoration codes.
+              for (Decorations deco : decosToTurnOn) {
+                if (deco != Decorations.RESET) { // Should not encounter RESET here normally
+                  legacyResult.append("&").append(deco.getKey());
+                  lastEmittedDecorations.add(deco);
+                }
+              }
+            }
+          }
+        }
+        legacyResult.append(text);
       }
     }
-    return newStr;
+
+    // Final cleanup for multiple &r might still be good if resets were spammed
+    String finalStr = legacyResult.toString();
+    finalStr = finalStr.replaceAll("(&r)+", "&r");
+    // Optional: further cleanup like "&f&r" -> "&r" if &f is default reset color.
+
+    //    System.out.println("finalStr = " + finalStr);
+    return finalStr;
+  }
+
+  // Helper to get legacy color code string (e.g., "&f", "&#RRGGBB")
+  private static String convertLegacyColorKeyToCode(String legacyColorKey) {
+    if (legacyColorKey.length() == 6) { // Hex RRGGBB
+      return "&#" + legacyColorKey;
+    } else { // Single char key like "f"
+      return "&" + legacyColorKey;
+    }
+  }
+
+  // Helper to get just the key part ("f" or "RRGGBB")
+  private static String convertMiniMessageColorToLegacyKey(String miniMessageColorTag) {
+    if (miniMessageColorTag.startsWith("<#")
+        && miniMessageColorTag.length() == 9
+        && miniMessageColorTag.endsWith(">")) {
+      return miniMessageColorTag.substring(2, 8); // RRGGBB
+    }
+    for (Colors c : Colors.values()) {
+      if (miniMessageColorTag.equals("<" + c.getValue() + ">")) {
+        return c.getKey(); // "f", "7", etc.
+      }
+    }
+    return getDefaultLegacyColorKey(); // Default if unknown
+  }
+
+  private static String getDefaultLegacyColorKey() {
+    return "f"; // Minecraft's default (white)
   }
 
   // Welcome Home##My love!##sgt:/home ##ttp:Click Here
