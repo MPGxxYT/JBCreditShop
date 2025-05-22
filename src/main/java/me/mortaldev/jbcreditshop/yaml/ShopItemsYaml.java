@@ -295,7 +295,7 @@ public class ShopItemsYaml {
     return new HashMap<>() {
       {
         put("shop_slot", shopItem::getShopSlot);
-        put("price", shopItem::getPrice);
+        put("price", shopItem::getRawPrice);
         put("discount", shopItem::getDiscount);
       }
     };
