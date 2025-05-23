@@ -102,7 +102,8 @@ public class ShopItemsManager {
     if (adminMode) {
       builder
           .addLore("&3&lID: &f" + shopItem.getItemID())
-          .addLore("&3&lShop ID: &f" + shopItem.getShopID());
+          .addLore("&3&lShop ID: &f" + shopItem.getShopID())
+          .addLore("&3&lGroup: &f" + (shopItem.getGroup() == null || shopItem.getGroup().isEmpty() ? "&7( NONE )" : shopItem.getGroup()));
     }
     String formattedPrice = formatPrice(shopItem.getPrice());
     if (adminMode) {
@@ -233,11 +234,14 @@ public class ShopItemsManager {
   }
 
   public void loadShopItems() {
+    shopItems.clear();
+    shopItemsByShopID.clear();
     shopItems = ShopItemsYaml.getInstance().read();
     sortByShop();
   }
 
   public void sortByShop() {
+    shopItemsByShopID.clear();
     for (ShopItem shopItem : shopItems) {
       if (!shopItemsByShopID.containsKey(shopItem.getShopID())) {
         shopItemsByShopID.put(
@@ -265,7 +269,7 @@ public class ShopItemsManager {
     return null;
   }
 
-  public Set<ShopItem> getByShopID(String shopID, boolean sortByShop) {
+  public Set<ShopItem> getItemsByShopID(String shopID, boolean sortByShop) {
     if (sortByShop) {
       sortByShop();
     }
