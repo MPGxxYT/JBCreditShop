@@ -1,8 +1,6 @@
 package me.mortaldev.jbcreditshop.menus;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.MenuData;
@@ -52,7 +50,7 @@ public class ShopsMenu extends InventoryGUI {
       if (mod > 0) {
         size = size % mod;
       }
-      return Utils.clamp((int) Math.ceil(size / 9.0), 2, 6);
+      return Utils.clamp((int) Math.ceil(size / 9.0)+1, 2, 6);
     }
     return 6;
   }
@@ -74,7 +72,7 @@ public class ShopsMenu extends InventoryGUI {
     return filtered;
   }
 
-  private Set<Shop> applyPage(Set<Shop> shops) {
+  private LinkedHashSet<Shop> applyPage(Set<Shop> shops) {
     int page = menuData.getPage();
     if (page > getMaxPage()) {
       page = getMaxPage();
@@ -82,7 +80,12 @@ public class ShopsMenu extends InventoryGUI {
     return shops.stream()
         .skip((page - 1) * 45L)
         .limit(45)
-        .collect(Collectors.toCollection(HashSet::new));
+        .collect(Collectors.toCollection(LinkedHashSet::new));
+  }
+
+  private LinkedHashSet<Shop> applySort(Set<Shop> shops) {
+    LinkedHashSet<Shop> result = new LinkedHashSet<>(shops);
+    return result.stream().sorted(Comparator.comparing(Shop::getShopID)).collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   @Override
@@ -99,7 +102,8 @@ public class ShopsMenu extends InventoryGUI {
       addButton(0, BackButton());
     }
     Set<Shop> filtered = applySearch(shops);
-    Set<Shop> pageAdjusted = applyPage(filtered);
+    LinkedHashSet<Shop> sorted = applySort(filtered);
+    LinkedHashSet<Shop> pageAdjusted = applyPage(sorted);
     int slot = 0;
     for (Shop shop : pageAdjusted) {
       addButton(slot + 9, ShopButton(shop));

@@ -26,6 +26,7 @@ public class ShopManager {
   private ShopManager() {}
 
   public void loadShops() {
+    shops.clear();
     shops = ShopsYaml.getInstance().read();
   }
 

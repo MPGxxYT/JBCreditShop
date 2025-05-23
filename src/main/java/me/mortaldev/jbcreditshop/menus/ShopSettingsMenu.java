@@ -1,13 +1,12 @@
 package me.mortaldev.jbcreditshop.menus;
 
 import java.util.Collections;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.listeners.ChatListener;
-import me.mortaldev.jbcreditshop.modules.MenuData;
-import me.mortaldev.jbcreditshop.modules.Shop;
-import me.mortaldev.jbcreditshop.modules.ShopManager;
+import me.mortaldev.jbcreditshop.modules.*;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
 import me.mortaldev.menuapi.GUIManager;
@@ -77,6 +76,8 @@ public class ShopSettingsMenu extends InventoryGUI {
                       "Delete Shop? &l" + shop.getShopID(),
                       ShopManager.getInstance().getShopMenuStack(shop, false),
                       player1 -> {
+                        Set<ShopItem> byShopID = ShopItemsManager.getInstance().getItemsByShopID(shop.getShopID(), true);
+                        byShopID.forEach(ShopItemsManager.getInstance()::deleteShopItem);
                         ShopManager.getInstance().deleteShop(shop);
                         GUIManager.getInstance().openGUI(new ShopsMenu(new MenuData()), player);
                       },

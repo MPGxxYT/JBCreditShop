@@ -34,8 +34,11 @@ public class AutoStyleMenu extends InventoryGUI {
   public AutoStyleMenu(Shop shop, boolean adminMode, MenuData menuData) {
     this.adminMode = adminMode;
     this.shop = shop;
-    this.shopItems = ShopItemsManager.getInstance().getByShopID(shop.getShopID(), false);
     this.menuData = menuData;
+    Set<ShopItem> shopItems =
+        ShopItemsManager.getInstance().getItemsByShopID(shop.getShopID(), false);
+    shopItems = applyFilterAndSearch(shopItems, getRegisteredPlayer());
+    this.shopItems = applyVisible(shopItems);
   }
 
   @Override
@@ -58,9 +61,22 @@ public class AutoStyleMenu extends InventoryGUI {
       if (mod > 0) {
         size = size % mod;
       }
-      return Utils.clamp((int) Math.ceil(size / 9.0), 2, 6);
+      return Utils.clamp((int) Math.ceil(size / 9.0) + 1, 2, 6);
     }
     return 6;
+  }
+
+  private Set<ShopItem> applyVisible(Set<ShopItem> shopItems) {
+    if (adminMode) {
+      return shopItems;
+    }
+    Set<ShopItem> result = new HashSet<>();
+    for (ShopItem item : shopItems) {
+      if (!item.cannotBeDisplayed() || item.isVisible()) {
+        result.add(item);
+      }
+    }
+    return result;
   }
 
   private Set<ShopItem> applyFilterAndSearch(Set<ShopItem> shopItems, Player player) {
@@ -212,18 +228,12 @@ public class AutoStyleMenu extends InventoryGUI {
 
   @Override
   public void decorate(Player player) {
-    Set<ShopItem> filterAndSearch = applyFilterAndSearch(shopItems, player);
-    LinkedHashSet<ShopItem> orderAndDirection = applyOrderAndDirection(filterAndSearch);
+    LinkedHashSet<ShopItem> orderAndDirection = applyOrderAndDirection(shopItems);
     LinkedHashSet<ShopItem> pageAdjusted = applyPage(orderAndDirection);
     int slot = 0;
     for (ShopItem shopItem : pageAdjusted) {
       if (slot == 45) {
         break;
-      }
-      if (shopItem.cannotBeDisplayed() || !shopItem.isVisible()) {
-        if (!adminMode) {
-          continue;
-        }
       }
       addButton(slot + 9, ShopItemButton(shopItem));
       slot++;
@@ -272,8 +282,16 @@ public class AutoStyleMenu extends InventoryGUI {
             event -> {
               Player player = (Player) event.getWhoClicked();
               player.sendMessage(TextUtil.format(""));
-              player.sendMessage(TextUtil.format("&e            Visit our store to purchase credits."));
-              player.sendMessage(TextUtil.format("&f > "+CREDITS_LINK+"##url:"+CREDITS_LINK+"##ttp:&7Click to open!## < ", true));
+              player.sendMessage(
+                  TextUtil.format("&e            Visit our store to purchase credits."));
+              player.sendMessage(
+                  TextUtil.format(
+                      "&f > "
+                          + CREDITS_LINK
+                          + "##url:"
+                          + CREDITS_LINK
+                          + "##ttp:&7Click to open!## < ",
+                      true));
               player.sendMessage(TextUtil.format(""));
               player.closeInventory();
               player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.5f, 1.414214f);
@@ -438,7 +456,8 @@ public class AutoStyleMenu extends InventoryGUI {
         .consumer(
             event -> {
               Player player = (Player) event.getWhoClicked();
-              player.playSound(player.getLocation(), Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_ON, 0.5f, 1);
+              player.playSound(
+                  player.getLocation(), Sound.BLOCK_METAL_PRESSURE_PLATE_CLICK_ON, 0.5f, 1);
               MenuData.Filter filter = menuData.getFilter();
               menuData.setFilter(filter.getNext(filter));
               GUIManager.getInstance()
@@ -530,7 +549,8 @@ public class AutoStyleMenu extends InventoryGUI {
                             menuData.setSearchQuery(textEntry);
                             GUIManager.getInstance()
                                 .openGUI(new AutoStyleMenu(shop, adminMode, menuData), player);
-                            player.playSound(player.getLocation(), Sound.BLOCK_TRIPWIRE_CLICK_ON, 0.5f, 1f);
+                            player.playSound(
+                                player.getLocation(), Sound.BLOCK_TRIPWIRE_CLICK_ON, 0.5f, 1f);
                           }
                           return Collections.emptyList();
                         })
@@ -557,7 +577,8 @@ public class AutoStyleMenu extends InventoryGUI {
                 return;
               }
               if (ShopItemsManager.getInstance().canAllowPurchase(shopItem, player)) {
-                player.playSound(player.getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON, 0.5f, 1.5f);
+                player.playSound(
+                    player.getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON, 0.5f, 1.5f);
                 ConfirmMenu confirmMenu =
                     new ConfirmMenu(
                         "&e&lPurchase " + shopItem.getDisplayName() + "?",
@@ -569,7 +590,8 @@ public class AutoStyleMenu extends InventoryGUI {
                               .openGUI(new AutoStyleMenu(shop, false, menuData), player);
                         },
                         (player1) -> {
-                          player.playSound(player.getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON, 0.5f, 1.5f);
+                          player.playSound(
+                              player.getLocation(), Sound.BLOCK_STONE_BUTTON_CLICK_ON, 0.5f, 1.5f);
                           GUIManager.getInstance()
                               .openGUI(new AutoStyleMenu(shop, false, menuData), player);
                         });

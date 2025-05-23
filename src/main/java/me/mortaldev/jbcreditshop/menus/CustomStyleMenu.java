@@ -26,7 +26,7 @@ public class CustomStyleMenu extends InventoryGUI {
   public CustomStyleMenu(Shop shop, boolean adminMode) {
     this.adminMode = adminMode;
     this.shop = shop;
-    this.shopItems = ShopItemsManager.getInstance().getByShopID(shop.getShopID(), false);
+    this.shopItems = ShopItemsManager.getInstance().getItemsByShopID(shop.getShopID(), false);
     sortSlots();
   }
 
@@ -69,7 +69,7 @@ public class CustomStyleMenu extends InventoryGUI {
   }
 
   private int autoGenSize() {
-    return Utils.clamp((int) Math.ceil(slotted.size() / 9.0), 1, 6);
+    return Utils.clamp((int) Math.ceil(slotted.size() / 9.0)+1, 1, 6);
   }
 
   @Override
