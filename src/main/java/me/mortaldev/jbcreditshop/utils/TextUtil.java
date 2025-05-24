@@ -22,9 +22,24 @@ public class TextUtil {
    * @return the formatted string
    */
   public static String fileFormat(String string) {
-    String trimmed = string.trim();
-    String withoutEdgeSpecialChars = trimmed.replaceAll("^\\W*|\\W*$", "");
-    return withoutEdgeSpecialChars.replaceAll("\\W+", "_");
+    // Trim leading and trailing whitespace
+    string = string.trim();
+
+    // Remove leading and trailing special characters (like ., -, _, etc.)
+    string = string.replaceAll("^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "");
+
+    // Replace any sequence of non-word characters with a single underscore
+    string = string.replaceAll("\\W+", "_");
+
+    // Handle potential empty string after formatting
+    if (string.isEmpty()) {
+      // Return a default or throw an exception, depending on desired behavior
+      // For now, returning a simple default like "formatted_string"
+      return "formatted_string";
+    }
+
+    return string;
+
   }
 
   /**
@@ -72,20 +87,21 @@ public class TextUtil {
   }
 
   /**
-   * Deserializes a JSON string representation of a Component object using GsonComponentSerializer.
+   * Deserializes a JSON string into a Component object using GsonComponentSerializer.
    *
    * @param string The JSON string to deserialize.
    * @return The deserialized Component object.
+
    */
   public static Component deserializeComponent(String string) {
     return GsonComponentSerializer.gson().deserialize(string);
   }
 
   /**
-   * Converts a Component object to a plain text string representation.
+   * Converts a Component object to a plain text string using PlainTextComponentSerializer.
    *
    * @param component The Component object to convert.
-   * @return The plain text string representation of the Component object.
+   * @return The plain text representation of the Component object.
    */
   public static String componentToString(Component component) {
     return PlainTextComponentSerializer.plainText().serialize(component);
@@ -110,8 +126,9 @@ public class TextUtil {
    * Formats the given string using MiniMessage format tags and returns it as a Component object.
    *
    * @param str the string to be formatted
-   * @param disableReset whether to disable the reset tag or not
+   * @param disableReset whether to disable the automatic reset tag at the beginning of color tags
    * @return the formatted string as a Component object
+
    */
   public static Component format(String str, boolean disableReset) {
     String result = asString(str, disableReset);
@@ -126,10 +143,21 @@ public class TextUtil {
   }
 
   /**
-   * Removes formatting tags from a Component object and returns the resulting plain text string.
+   *    * Converts a MiniMessage Component back into a legacy color code string (e.g., "&aHello").
+   * This attempts to preserve colors and basic decorations but may not perfectly replicate
+   * complex MiniMessage features like gradients, transitions, or nested hover/click events
+   * in a simple legacy string.
    *
-   * @param component the Component object to remove the formatting tags from
-   * @return the plain text string representation of the Component object without formatting tags
+   * <p>It processes the MiniMessage string representation of the component, tracking the
+   * current color and decoration states based on the tags encountered. When text is found,
+   * it compares the current state to the last emitted legacy codes and appends the necessary
+   * legacy codes (&, §) to transition to the current state before appending the text.
+   *
+   * <p>Note: This is a best-effort conversion. MiniMessage is more expressive than legacy codes.
+   *
+   * @param component The MiniMessage Component to deformat.
+   * @return A string with legacy color and decoration codes.
+
    */
   public static String deformat(Component component) {
     String miniMessageStr = MiniMessage.miniMessage().serialize(component);
