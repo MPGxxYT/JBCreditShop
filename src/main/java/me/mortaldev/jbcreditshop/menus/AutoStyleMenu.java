@@ -26,7 +26,7 @@ import org.bukkit.inventory.ItemStack;
 public class AutoStyleMenu extends InventoryGUI {
 
   private final Shop shop;
-  private final Set<ShopItem> shopItems;
+  private Set<ShopItem> shopItems;
   private final boolean adminMode;
   private final MenuData menuData;
   private static final String CREDITS_LINK = "https://store.jailbreakmc.games/category/credits";
@@ -35,14 +35,13 @@ public class AutoStyleMenu extends InventoryGUI {
     this.adminMode = adminMode;
     this.shop = shop;
     this.menuData = menuData;
-    Set<ShopItem> shopItems =
-        ShopItemsManager.getInstance().getItemsByShopID(shop.getShopID(), false);
-    shopItems = applyFilterAndSearch(shopItems, getRegisteredPlayer());
-    this.shopItems = applyVisible(shopItems);
+    this.shopItems = ShopItemsManager.getInstance().getItemsByShopID(shop.getShopID(), false);
   }
 
   @Override
   protected Inventory createInventory() {
+    shopItems = applyFilterAndSearch(shopItems, getRegisteredPlayer());
+    shopItems = applyVisible(shopItems);
     return Bukkit.createInventory(null, getSize() * 9, TextUtil.format(shop.getShopDisplay()));
   }
 
@@ -171,12 +170,10 @@ public class AutoStyleMenu extends InventoryGUI {
     }
     LinkedHashSet<ShopItem> result = new LinkedHashSet<>(shopItems);
     switch (menuData.getOrderBy()) {
-      case NAME -> {
-        result =
-            result.stream()
-                .sorted(Comparator.comparing(ShopItem::getPlainDisplayName))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-      }
+      case NAME -> result =
+          result.stream()
+              .sorted(Comparator.comparing(ShopItem::getPlainDisplayName))
+              .collect(Collectors.toCollection(LinkedHashSet::new));
       case GROUP -> {
         LinkedHashSet<ShopItem> hasGroup = new LinkedHashSet<>();
         LinkedHashSet<ShopItem> doesntHaveGroup = new LinkedHashSet<>();
