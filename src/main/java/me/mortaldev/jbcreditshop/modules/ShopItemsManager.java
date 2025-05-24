@@ -396,6 +396,7 @@ public class ShopItemsManager {
     player.sendMessage(
         TextUtil.format(
             "&3Purchased " + shopItem.getDisplayName() + " &3for &f&l" + price + "&3 credits."));
+    Main.log(player.getName() + " purchased " + shopItem.getItemID() + " for " + price + " credits.");
     new EcoBitsAccount(player).remove(BigDecimal.valueOf(price));
     Main.playAcceptSound(player);
   }
