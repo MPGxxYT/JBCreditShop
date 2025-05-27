@@ -150,9 +150,6 @@ public class ShopItemsYaml {
       FileConfiguration config = entry.getKey();
       String filePath = entry.getValue();
 
-      // Assuming items are stored under numeric keys if SHOPS_ITEMS_FILE_NAME is used,
-      // or could be item_id if other files are loaded by YamlReader.
-      // This logic might need adjustment based on how YamlReader loads configs.
       if (!filePath.endsWith(SHOP_ITEMS_FILE_NAME)) {
         // Main.log("Skipping non-standard shop item file for numeric key processing: " + filePath);
         // continue; // Or handle differently if other files have different structures

@@ -69,13 +69,13 @@ public class AutoStyleMenu extends InventoryGUI {
     if (adminMode) {
       return shopItems;
     }
-    Set<ShopItem> result = new HashSet<>();
+    Set<ShopItem> visibleItems = new HashSet<>();
     for (ShopItem item : shopItems) {
-      if (!item.cannotBeDisplayed() || item.isVisible()) {
-        result.add(item);
+      if (!item.cannotBeDisplayed() && item.isVisible()) {
+        visibleItems.add(item);
       }
     }
-    return result;
+    return visibleItems;
   }
 
   private Set<ShopItem> applyFilterAndSearch(Set<ShopItem> shopItems, Player player) {
@@ -170,10 +170,11 @@ public class AutoStyleMenu extends InventoryGUI {
     }
     LinkedHashSet<ShopItem> result = new LinkedHashSet<>(shopItems);
     switch (menuData.getOrderBy()) {
-      case NAME -> result =
-          result.stream()
-              .sorted(Comparator.comparing(ShopItem::getPlainDisplayName))
-              .collect(Collectors.toCollection(LinkedHashSet::new));
+      case NAME ->
+          result =
+              result.stream()
+                  .sorted(Comparator.comparing(ShopItem::getPlainDisplayName))
+                  .collect(Collectors.toCollection(LinkedHashSet::new));
       case GROUP -> {
         LinkedHashSet<ShopItem> hasGroup = new LinkedHashSet<>();
         LinkedHashSet<ShopItem> doesntHaveGroup = new LinkedHashSet<>();
