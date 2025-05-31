@@ -288,8 +288,7 @@ public class AutoStyleMenu extends InventoryGUI {
                           + CREDITS_LINK
                           + "##url:"
                           + CREDITS_LINK
-                          + "##ttp:&7Click to open!## < ",
-                      true));
+                          + "##ttp:&7Click to open!## < "));
               player.sendMessage(TextUtil.format(""));
               player.closeInventory();
               player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.5f, 1.414214f);
