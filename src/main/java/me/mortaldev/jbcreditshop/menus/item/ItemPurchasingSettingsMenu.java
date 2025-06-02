@@ -1,4 +1,4 @@
-package me.mortaldev.jbcreditshop.menus;
+package me.mortaldev.jbcreditshop.menus.item;
 
 import java.util.Collections;
 import me.mortaldev.jbcreditshop.Main;

@@ -1,7 +1,9 @@
-package me.mortaldev.jbcreditshop.menus;
+package me.mortaldev.jbcreditshop.menus.styled;
 
 import java.util.*;
 import me.mortaldev.jbcreditshop.Main;
+import me.mortaldev.jbcreditshop.menus.ConfirmMenu;
+import me.mortaldev.jbcreditshop.menus.item.ItemSettingsMenu;
 import me.mortaldev.jbcreditshop.modules.*;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
@@ -163,10 +165,8 @@ public class CustomStyleMenu extends InventoryGUI {
                           GUIManager.getInstance()
                               .openGUI(new CustomStyleMenu(shop, false), player);
                         },
-                        (player1) -> {
-                          GUIManager.getInstance()
-                              .openGUI(new CustomStyleMenu(shop, false), player);
-                        });
+                        (player1) -> GUIManager.getInstance()
+                            .openGUI(new CustomStyleMenu(shop, false), player));
                 GUIManager.getInstance().openGUI(confirmMenu, player);
               }
             });

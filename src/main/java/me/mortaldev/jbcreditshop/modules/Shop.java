@@ -3,6 +3,8 @@ package me.mortaldev.jbcreditshop.modules;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import me.mortaldev.crudapi.CRUD;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.records.Pair;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
@@ -11,7 +13,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 
-public class Shop {
+public class Shop implements CRUD.Identifiable {
+
   private Pair<FileConfiguration, String> source;
   private ConfigurationSection section;
 
@@ -46,6 +49,11 @@ public class Shop {
   }
 
   public String getShopID() {
+    return shopID;
+  }
+
+  @Override
+  public String getID() {
     return shopID;
   }
 

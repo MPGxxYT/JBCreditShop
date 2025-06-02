@@ -8,11 +8,15 @@ import java.time.ZonedDateTime;
 import java.util.HashSet;
 
 import me.mortaldev.YAML;
+import me.mortaldev.jbcreditshop.commands.BundleCommand;
 import me.mortaldev.jbcreditshop.commands.CreditShopCommand;
+import me.mortaldev.jbcreditshop.listeners.BundleListener;
 import me.mortaldev.jbcreditshop.listeners.ChatListener;
 import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.modules.ShopItemsManager;
 import me.mortaldev.jbcreditshop.modules.ShopManager;
+import me.mortaldev.jbcreditshop.modules.bundles.Bundle;
+import me.mortaldev.jbcreditshop.modules.bundles.BundleManager;
 import me.mortaldev.jbcreditshop.modules.playerdata.PlayerDataManager;
 import me.mortaldev.jbcreditshop.modules.shopstats.ShopStatsCRUD;
 import me.mortaldev.jbcreditshop.modules.transaction.TransactionLogManager;
@@ -142,6 +146,7 @@ public final class Main extends JavaPlugin {
     PlayerDataManager.getInstance().load();
     ShopStatsCRUD.getInstance().load();
     TransactionLogManager.getInstance().load();
+    BundleManager.getInstance().load();
 
     // GUI Manager
     GUIListener guiListener = new GUIListener(GUIManager.getInstance()); // MenuAPI
@@ -150,6 +155,7 @@ public final class Main extends JavaPlugin {
     // Events
 
     getServer().getPluginManager().registerEvents(new ChatListener(), this);
+    getServer().getPluginManager().registerEvents(new BundleListener(), this);
 
     // COMMANDS
     commandManager
@@ -160,8 +166,17 @@ public final class Main extends JavaPlugin {
                 ShopManager.getInstance().getShops().stream()
                     .map(Shop::getShopID)
                     .collect(ImmutableList.toImmutableList()));
+    commandManager
+        .getCommandCompletions()
+        .registerCompletion(
+            "bundles",
+            c ->
+                BundleManager.getInstance().getSet().stream()
+                    .map(Bundle::getID)
+                    .collect(ImmutableList.toImmutableList()));
 
     commandManager.registerCommand(new CreditShopCommand());
+    commandManager.registerCommand(new BundleCommand());
 
     getLogger().info(LABEL + " Enabled");
   }
