@@ -1,9 +1,10 @@
-package me.mortaldev.jbcreditshop.menus;
+package me.mortaldev.jbcreditshop.menus.item;
 
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import me.mortaldev.jbcreditshop.Main;
+import me.mortaldev.jbcreditshop.menus.ConfirmMenu;
 import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.modules.ShopItem;
 import me.mortaldev.jbcreditshop.modules.ShopItemsManager;
@@ -80,10 +81,8 @@ public class ItemSettingsMenu extends InventoryGUI {
                         ShopItemsManager.getInstance().deleteShopItem(shopItem);
                         ShopManager.getInstance().openShop(shop, player, true);
                       },
-                      player1 -> {
-                        GUIManager.getInstance()
-                            .openGUI(new ItemSettingsMenu(shop, shopItem), player);
-                      });
+                      player1 -> GUIManager.getInstance()
+                          .openGUI(new ItemSettingsMenu(shop, shopItem), player));
               GUIManager.getInstance().openGUI(confirmMenu, player);
             });
   }
@@ -251,44 +250,42 @@ public class ItemSettingsMenu extends InventoryGUI {
                   ShopItemsManager.getInstance().updateShopItem(newShopItem);
                   GUIManager.getInstance().openGUI(new ItemSettingsMenu(shop, newShopItem), player);
                 }
-                case LEFT -> {
-                  new AnvilGUI.Builder()
-                      .plugin(Main.getInstance())
-                      .title("")
-                      .itemLeft(
-                          ItemStackHelper.builder(Material.GOLD_NUGGET)
-                              .name(shopItem.getRawPrice() + "")
-                              .build())
-                      .onClick(
-                          (slot, stateSnapshot) -> {
-                            if (slot == 2) {
-                              String textEntry = stateSnapshot.getText();
-                              textEntry = textEntry.trim();
-                              Pattern pattern = Pattern.compile("^-?\\d+$");
-                              Matcher matcher = pattern.matcher(textEntry);
-                              if (!matcher.matches()) {
-                                Main.playDenySound(player);
-                                player.sendMessage(TextUtil.format("&cInvalid price!"));
-                                GUIManager.getInstance()
-                                    .openGUI(new ItemSettingsMenu(shop, shopItem), player);
-                                return Collections.emptyList();
-                              }
-                              int price;
-                              try {
-                                price = Integer.parseInt(textEntry);
-                              } catch (NumberFormatException e) {
-                                Main.warn(e.getMessage());
-                                return Collections.emptyList();
-                              }
-                              ShopItem newShopItem = shopItem.toBuilder().setPrice(price).build();
-                              ShopItemsManager.getInstance().updateShopItem(newShopItem);
+                case LEFT -> new AnvilGUI.Builder()
+                    .plugin(Main.getInstance())
+                    .title("")
+                    .itemLeft(
+                        ItemStackHelper.builder(Material.GOLD_NUGGET)
+                            .name(shopItem.getRawPrice() + "")
+                            .build())
+                    .onClick(
+                        (slot, stateSnapshot) -> {
+                          if (slot == 2) {
+                            String textEntry = stateSnapshot.getText();
+                            textEntry = textEntry.trim();
+                            Pattern pattern = Pattern.compile("^-?\\d+$");
+                            Matcher matcher = pattern.matcher(textEntry);
+                            if (!matcher.matches()) {
+                              Main.playDenySound(player);
+                              player.sendMessage(TextUtil.format("&cInvalid price!"));
                               GUIManager.getInstance()
-                                  .openGUI(new ItemSettingsMenu(shop, newShopItem), player);
+                                  .openGUI(new ItemSettingsMenu(shop, shopItem), player);
+                              return Collections.emptyList();
                             }
-                            return Collections.emptyList();
-                          })
-                      .open(player);
-                }
+                            int price;
+                            try {
+                              price = Integer.parseInt(textEntry);
+                            } catch (NumberFormatException e) {
+                              Main.warn(e.getMessage());
+                              return Collections.emptyList();
+                            }
+                            ShopItem newShopItem = shopItem.toBuilder().setPrice(price).build();
+                            ShopItemsManager.getInstance().updateShopItem(newShopItem);
+                            GUIManager.getInstance()
+                                .openGUI(new ItemSettingsMenu(shop, newShopItem), player);
+                          }
+                          return Collections.emptyList();
+                        })
+                    .open(player);
                 case RIGHT ->
                     new AnvilGUI.Builder()
                         .plugin(Main.getInstance())

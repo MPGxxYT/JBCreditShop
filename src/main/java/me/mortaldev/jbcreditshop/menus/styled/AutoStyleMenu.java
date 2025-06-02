@@ -1,10 +1,14 @@
-package me.mortaldev.jbcreditshop.menus;
+package me.mortaldev.jbcreditshop.menus.styled;
 
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.ecobits.EcoBitsAccount;
+import me.mortaldev.jbcreditshop.menus.ConfirmMenu;
+import me.mortaldev.jbcreditshop.menus.shop.ShopSettingsMenu;
+import me.mortaldev.jbcreditshop.menus.shop.ShopsMenu;
+import me.mortaldev.jbcreditshop.menus.item.ItemSettingsMenu;
 import me.mortaldev.jbcreditshop.modules.*;
 import me.mortaldev.jbcreditshop.modules.playerdata.PlayerData;
 import me.mortaldev.jbcreditshop.modules.playerdata.PlayerDataManager;

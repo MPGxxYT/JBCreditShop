@@ -1,4 +1,4 @@
-package me.mortaldev.jbcreditshop.menus;
+package me.mortaldev.jbcreditshop.menus.shop;
 
 import java.util.Collections;
 import java.util.Set;
@@ -6,6 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.listeners.ChatListener;
+import me.mortaldev.jbcreditshop.menus.ConfirmMenu;
 import me.mortaldev.jbcreditshop.modules.*;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.jbcreditshop.utils.TextUtil;

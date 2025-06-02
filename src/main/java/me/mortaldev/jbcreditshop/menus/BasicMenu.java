@@ -1,11 +1,8 @@
 package me.mortaldev.jbcreditshop.menus;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import me.mortaldev.crudapi.CRUD;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.MenuData;
-import me.mortaldev.jbcreditshop.modules.Shop;
-import me.mortaldev.jbcreditshop.modules.ShopManager;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
 import me.mortaldev.jbcreditshop.utils.Utils;
@@ -15,77 +12,84 @@ import me.mortaldev.menuapi.InventoryGUI;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-public class ShopsMenu extends InventoryGUI {
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
-  private final Set<Shop> shops;
+public abstract class BasicMenu<T extends CRUD.Identifiable> extends InventoryGUI {
+
   private final MenuData menuData;
+  private final Set<T> dataSet;
 
-  public ShopsMenu(MenuData menuData) {
+  public BasicMenu(MenuData menuData, Set<T> dataSet) {
     this.menuData = menuData;
-    this.shops = ShopManager.getInstance().getShops();
+    this.dataSet = dataSet;
   }
 
   @Override
   protected Inventory createInventory() {
-    return Bukkit.createInventory(null, getSize() * 9, TextUtil.format("Shops"));
+    return Bukkit.createInventory(null, getSize() * 9, TextUtil.format(getInventoryName()));
   }
 
   private int getMaxPage() {
-    if (shops.isEmpty()) {
+    if (dataSet.isEmpty()) {
       return 1;
     }
-    return (int) Math.ceil(shops.size() / 45.0);
+    return (int) Math.ceil(dataSet.size() / 45.0);
   }
 
   private int getSize() { // Paginated
     int maxPage = getMaxPage();
     if (menuData.getPage() >= maxPage) {
       int mod = (maxPage - 1) * 45;
-      int size = shops.size();
+      int size = dataSet.size();
       if (mod > 0) {
         size = size % mod;
       }
-      return Utils.clamp((int) Math.ceil(size / 9.0)+1, 2, 6);
+      return Utils.clamp((int) Math.ceil(size / 9.0) + 1, 2, 6);
     }
     return 6;
   }
 
-  private Set<Shop> applySearch(Set<Shop> shops) {
-    if (shops.isEmpty()) {
+  private Set<T> applySearch(Set<T> dataSet) {
+    if (dataSet.isEmpty()) {
       return new HashSet<>();
     }
     String search = menuData.getSearchQuery();
     if (search == null || search.isEmpty()) {
-      return shops;
+      return dataSet;
     }
-    Set<Shop> filtered = new HashSet<>();
-    for (Shop shop : shops) {
-      if (shop.getShopID().toLowerCase().contains(search.toLowerCase())) {
-        filtered.add(shop);
+    Set<T> filtered = new HashSet<>();
+    for (T data : dataSet) {
+      if (data.getID().toLowerCase().contains(search.toLowerCase())) {
+        filtered.add(data);
       }
     }
     return filtered;
   }
 
-  private LinkedHashSet<Shop> applyPage(Set<Shop> shops) {
+  private LinkedHashSet<T> applyPage(Set<T> data) {
     int page = menuData.getPage();
     if (page > getMaxPage()) {
       page = getMaxPage();
     }
-    return shops.stream()
+    return data.stream()
         .skip((page - 1) * 45L)
         .limit(45)
         .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
-  private LinkedHashSet<Shop> applySort(Set<Shop> shops) {
-    LinkedHashSet<Shop> result = new LinkedHashSet<>(shops);
-    return result.stream().sorted(Comparator.comparing(Shop::getShopID)).collect(Collectors.toCollection(LinkedHashSet::new));
+  private LinkedHashSet<T> applySort(Set<T> data) {
+    LinkedHashSet<T> result = new LinkedHashSet<>(data);
+    return result.stream()
+        .sorted(Comparator.comparing(CRUD.Identifiable::getID))
+        .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   @Override
@@ -98,34 +102,50 @@ public class ShopsMenu extends InventoryGUI {
     if (getMaxPage() > 1) {
       addButton(8, NextButton());
     }
-    if (menuData.getPage() > 1) {
+    if (menuData.getPage() > 1 || backButton() != null) {
       addButton(0, BackButton());
     }
-    Set<Shop> filtered = applySearch(shops);
-    LinkedHashSet<Shop> sorted = applySort(filtered);
-    LinkedHashSet<Shop> pageAdjusted = applyPage(sorted);
+    Set<T> filtered = applySearch(dataSet);
+    LinkedHashSet<T> sorted = applySort(filtered);
+    LinkedHashSet<T> pageAdjusted = applyPage(sorted);
     int slot = 0;
-    for (Shop shop : pageAdjusted) {
-      addButton(slot + 9, ShopButton(shop));
+    for (T data : pageAdjusted) {
+      addButton(slot + 9, DataButton(data));
       if (slot == (getSize() - 1) * 9) {
         break;
       }
       slot++;
     }
     addButton(4, SearchButton());
-    addButton(5, CreateShopButton());
+    addButton(5, CreateButton());
     super.decorate(player);
   }
 
-  private InventoryButton CreateShopButton() {
+  public abstract BasicMenu<T> getNewInstance(MenuData menuData, Set<T> dataSet);
+
+  public abstract String getInventoryName();
+
+  public abstract Consumer<InventoryClickEvent> backButton();
+
+  public abstract Runnable createNewData(String textEntry, InventoryClickEvent event, MenuData menuData);
+
+  public abstract ItemStack getDataButtonDisplayStack(T data, Player player);
+
+  public abstract Consumer<InventoryClickEvent> dataButtonClickConsumer(T data);
+
+  private InventoryButton DataButton(T data) {
+    return new InventoryButton()
+        .creator(player -> getDataButtonDisplayStack(data, player))
+        .consumer(dataButtonClickConsumer(data));
+  }
+
+  private InventoryButton CreateButton() {
     return new InventoryButton()
         .creator(
             player ->
                 ItemStackHelper.builder(Material.LIME_DYE)
-                    .name("&2&lCreate Shop")
-                    .addLore("&7Creates a new shop to manage.")
-                    .addLore()
-                    .addLore("&7&o[Shop locked by default]")
+                    .name("&2&lCreate")
+                    .addLore("&7Creates a new instance to manage.")
                     .addLore()
                     .addLore("&7( click to create )")
                     .build())
@@ -134,7 +154,7 @@ public class ShopsMenu extends InventoryGUI {
               Player player = (Player) event.getWhoClicked();
               new AnvilGUI.Builder()
                   .plugin(Main.getInstance())
-                  .title("Create Shop")
+                  .title("Create")
                   .itemLeft(ItemStackHelper.builder(Material.PAPER).name("id").build())
                   .onClick(
                       (slot, stateSnapshot) -> {
@@ -142,29 +162,15 @@ public class ShopsMenu extends InventoryGUI {
                           String textEntry = stateSnapshot.getText();
                           textEntry = textEntry.trim();
                           if (textEntry.isBlank()) {
-                            player.sendMessage("&cMust enter an id for the shop.");
+                            player.sendMessage("&cMust enter an id!");
                             Main.playDenySound(player);
-                            GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
+                            GUIManager.getInstance()
+                                .openGUI(getNewInstance(menuData, dataSet), player);
                             return Collections.emptyList();
                           }
                           textEntry = textEntry.toLowerCase().replaceAll("[^a-z0-9_]+", "_");
-                          Shop shop =
-                              Shop.builder()
-                                  .setShopID(textEntry)
-                                  .setShopDisplay("&7" + textEntry)
-                                  .setDefaultDisplayMaterial(Material.GOLD_INGOT)
-                                  .setLocked(true)
-                                  .build();
-                          ShopManager shopManager = ShopManager.getInstance();
-                          if (!shopManager.addShop(shop)) {
-                            player.sendMessage(
-                                TextUtil.format(
-                                    "&cShop with ID " + textEntry + " already exists."));
-                            Main.playDenySound(player);
-                            GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
-                            return Collections.emptyList();
-                          }
-                          shopManager.openShop(shop, player, true);
+                          createNewData(textEntry, event, menuData).run();
+                          return Collections.emptyList();
                         }
                         return Collections.emptyList();
                       })
@@ -191,12 +197,13 @@ public class ShopsMenu extends InventoryGUI {
         .consumer(
             event -> {
               Player player = (Player) event.getWhoClicked();
+              player.playSound(player.getLocation(), Sound.BLOCK_TRIPWIRE_CLICK_ON, 0.5f, 0.75f);
               if (!menuData.getSearchQuery().isBlank()) {
                 menuData.setSearchQuery("");
-                GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
+                GUIManager.getInstance().openGUI(getNewInstance(menuData, dataSet), player);
                 return;
               }
-              if (event.isLeftClick()) {
+              if (menuData.getSearchQuery().isBlank() || event.isLeftClick()) {
                 new AnvilGUI.Builder()
                     .plugin(Main.getInstance())
                     .title("Search")
@@ -207,32 +214,18 @@ public class ShopsMenu extends InventoryGUI {
                             String textEntry = stateSnapshot.getText();
                             textEntry = textEntry.trim();
                             menuData.setSearchQuery(textEntry);
-                            GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
+                            GUIManager.getInstance()
+                                .openGUI(getNewInstance(menuData, dataSet), player);
+                            player.playSound(
+                                player.getLocation(), Sound.BLOCK_TRIPWIRE_CLICK_ON, 0.5f, 1f);
                           }
                           return Collections.emptyList();
                         })
                     .open(player);
               } else if (event.isRightClick()) {
                 menuData.setSearchQuery("");
-                GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
+                GUIManager.getInstance().openGUI(getNewInstance(menuData, dataSet), player);
               }
-            });
-  }
-
-  private InventoryButton ShopButton(Shop shop) {
-    return new InventoryButton()
-        .creator(player -> ShopManager.getInstance().getShopMenuStack(shop))
-        .consumer(
-            event -> {
-              Player player = (Player) event.getWhoClicked();
-              if (event.getClick() == ClickType.RIGHT) {
-                ShopManager.getInstance().openShop(shop, player, true);
-                return;
-              } else if (event.getClick() == ClickType.MIDDLE) {
-                GUIManager.getInstance().openGUI(new ShopSettingsMenu(shop, true), player);
-                return;
-              }
-              ShopManager.getInstance().openShop(shop, player, false);
             });
   }
 
@@ -250,8 +243,12 @@ public class ShopsMenu extends InventoryGUI {
               int page = menuData.getPage();
               if (page > 1) {
                 menuData.setPage(page - 1);
+                GUIManager.getInstance().openGUI(getNewInstance(menuData, dataSet), player);
+              } else {
+                if (backButton() != null) {
+                  backButton().accept(event);
+                }
               }
-              GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
             });
   }
 
@@ -270,7 +267,7 @@ public class ShopsMenu extends InventoryGUI {
               if (page < getMaxPage()) {
                 menuData.setPage(page + 1);
               }
-              GUIManager.getInstance().openGUI(new ShopsMenu(menuData), player);
+              GUIManager.getInstance().openGUI(getNewInstance(menuData, dataSet), player);
             });
   }
 }
