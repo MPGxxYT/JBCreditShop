@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import me.mortaldev.crudapi.CRUD;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Bundle implements CRUD.Identifiable {
@@ -14,12 +15,12 @@ public class Bundle implements CRUD.Identifiable {
   private final List<ItemStack> items;
 
   public Bundle(@JsonProperty("items") List<ItemStack> items, @JsonProperty("id") String ID) {
-    this.items = items == null ? List.of() : items;
+    this.items = items == null ? new ArrayList<>() : items;
     this.ID = ID;
   }
 
   public static Bundle create(String ID) {
-    Bundle bundle = new Bundle(List.of(), ID);
+    Bundle bundle = new Bundle(new ArrayList<>(), ID);
     bundle.setDescription(ID);
     bundle.setName(ID);
     return bundle;
