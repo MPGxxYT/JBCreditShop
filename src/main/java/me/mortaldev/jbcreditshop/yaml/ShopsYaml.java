@@ -85,7 +85,7 @@ public class ShopsYaml {
     if (shop.getSource() == null
         || shop.getSource().first() == null
         || shop.getSource().second() == null) {
-      Main.error(
+      Main.severe(
           "Shop object (ID: "
               + (shop.getShopID() != null ? shop.getShopID() : "N/A")
               + ") is missing source FileConfiguration or path. Cannot delete.");
@@ -96,7 +96,7 @@ public class ShopsYaml {
 
     File file = new File(Main.getInstance().getDataFolder(), configPath);
     if (!file.exists()) {
-      Main.error("Shop object (ID: " + shop.getShopID() + ") does not exist. Cannot delete.");
+      Main.severe("Shop object (ID: " + shop.getShopID() + ") does not exist. Cannot delete.");
       return;
     }
 
@@ -130,7 +130,7 @@ public class ShopsYaml {
     if (shop.getSource() == null
         || shop.getSource().first() == null
         || shop.getSource().second() == null) {
-      Main.error(
+      Main.severe(
           "Shop object (ID: "
               + (shop.getShopID() != null ? shop.getShopID() : "N/A")
               + ") is missing source FileConfiguration or path. Cannot save.");
@@ -154,7 +154,7 @@ public class ShopsYaml {
 
     if (sectionToSaveIn == null) {
       // This fallback is crucial if a shop object reaches save() without a pre-assigned section.
-      Main.error(
+      Main.severe(
           "Shop section is null for shopID: "
               + shop.getShopID()
               + " during save. "

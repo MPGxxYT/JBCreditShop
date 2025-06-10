@@ -1,25 +1,11 @@
 package me.mortaldev.jbcreditshop;
 
-import co.aikar.commands.PaperCommandManager;
-import com.google.common.collect.ImmutableList;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 
 import me.mortaldev.YAML;
-import me.mortaldev.jbcreditshop.commands.BundleCommand;
-import me.mortaldev.jbcreditshop.commands.CreditShopCommand;
-import me.mortaldev.jbcreditshop.listeners.BundleListener;
-import me.mortaldev.jbcreditshop.listeners.ChatListener;
-import me.mortaldev.jbcreditshop.modules.Shop;
-import me.mortaldev.jbcreditshop.modules.ShopItemsManager;
-import me.mortaldev.jbcreditshop.modules.ShopManager;
-import me.mortaldev.jbcreditshop.modules.bundles.Bundle;
-import me.mortaldev.jbcreditshop.modules.bundles.BundleManager;
-import me.mortaldev.jbcreditshop.modules.playerdata.PlayerDataManager;
-import me.mortaldev.jbcreditshop.modules.shopstats.ShopStatsCRUD;
-import me.mortaldev.jbcreditshop.modules.transaction.TransactionLogManager;
 import me.mortaldev.menuapi.GUIListener;
 import me.mortaldev.menuapi.GUIManager;
 import org.bukkit.Bukkit;
@@ -30,12 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class Main extends JavaPlugin {
 
   private static final String LABEL = "JBCreditShop";
-  private static final HashSet<String> dependencies =
-      new HashSet<>() {
-        {
-          add("EcoBits");
-        }
-      };
+  private static final HashSet<String> dependencies = new HashSet<>();
   private static Main instance;
   private static boolean debug = false;
 
@@ -61,7 +42,9 @@ public final class Main extends JavaPlugin {
     Bukkit.getScheduler()
         .scheduleSyncDelayedTask(
             instance,
-            () -> player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5f, 1.059463f),
+            () ->
+                player.playSound(
+                    player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5f, 1.059463f),
             5);
   }
 
@@ -96,7 +79,7 @@ public final class Main extends JavaPlugin {
     Bukkit.getLogger().warning("[" + Main.getLabel() + "] " + message);
   }
 
-  public static void error(String message) {
+  public static void severe(String message) {
     Bukkit.getLogger().severe("[" + Main.getLabel() + "] " + message);
   }
 
@@ -106,15 +89,15 @@ public final class Main extends JavaPlugin {
   }
 
   public static YAML getYAML() {
-    YAML instance1 = YAML.getInstance();
-    instance1.setMain(getInstance());
-    return instance1;
+    YAML yamlInstance = YAML.getInstance();
+    yamlInstance.setMain(getInstance());
+    return yamlInstance;
   }
 
   @Override
   public void onEnable() {
     instance = this;
-    PaperCommandManager commandManager = new PaperCommandManager(this); // AikarsCommands
+    // PaperCommandManager commandManager = new PaperCommandManager(this); // AikarsCommands
 
     // DATA FOLDER
 
@@ -139,14 +122,10 @@ public final class Main extends JavaPlugin {
     // Managers (Loading data)
 
     //  - YAML BASED
-    ShopManager.getInstance().loadShops();
-    ShopItemsManager.getInstance().loadShopItems();
+    //    ShopManager.getInstance().loadShops();
 
     //  - CRUD BASED
-    PlayerDataManager.getInstance().load();
-    ShopStatsCRUD.getInstance().load();
-    TransactionLogManager.getInstance().load();
-    BundleManager.getInstance().load();
+    //    PlayerDataManager.getInstance().load();
 
     // GUI Manager
     GUIListener guiListener = new GUIListener(GUIManager.getInstance()); // MenuAPI
@@ -154,34 +133,22 @@ public final class Main extends JavaPlugin {
 
     // Events
 
-    getServer().getPluginManager().registerEvents(new ChatListener(), this);
-    getServer().getPluginManager().registerEvents(new BundleListener(), this);
+    //    getServer().getPluginManager().registerEvents(new ChatListener(), this);
 
     // COMMANDS
-    commandManager
-        .getCommandCompletions()
-        .registerCompletion(
-            "shops",
-            c ->
-                ShopManager.getInstance().getShops().stream()
-                    .map(Shop::getShopID)
-                    .collect(ImmutableList.toImmutableList()));
-    commandManager
-        .getCommandCompletions()
-        .registerCompletion(
-            "bundles",
-            c ->
-                BundleManager.getInstance().getSet().stream()
-                    .map(Bundle::getID)
-                    .collect(ImmutableList.toImmutableList()));
+    //    commandManager
+    //        .getCommandCompletions()
+    //        .registerCompletion(
+    //            "shops",
+    //            c ->
+    //                ShopManager.getInstance().getShops().stream()
+    //                    .map(Shop::getShopID)
+    //                    .collect(ImmutableList.toImmutableList()));
 
-    commandManager.registerCommand(new CreditShopCommand());
-    commandManager.registerCommand(new BundleCommand());
+    //    commandManager.registerCommand(new BundleCommand());
 
     getLogger().info(LABEL + " Enabled");
   }
-
-  // TODO: ADD README.md for instructions
 
   @Override
   public void onDisable() {

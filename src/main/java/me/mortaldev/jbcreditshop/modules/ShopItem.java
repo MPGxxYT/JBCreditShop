@@ -108,7 +108,7 @@ public class ShopItem {
     if (price < 0) {
       Optional<Shop> shop = ShopManager.getInstance().getShop(shopID);
       if (shop.isEmpty()) {
-        Main.error("Shop " + shopID + " does not exist.");
+        Main.severe("Shop " + shopID + " does not exist.");
         return 12000;
       }
       return shop.get().getDefaultPrice();

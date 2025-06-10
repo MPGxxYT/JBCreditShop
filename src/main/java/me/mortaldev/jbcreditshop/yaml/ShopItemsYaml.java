@@ -73,7 +73,7 @@ public class ShopItemsYaml {
     if (shopItem.getSource() == null
         || shopItem.getSource().first() == null
         || shopItem.getSource().second() == null) {
-      Main.error(
+      Main.severe(
           "ShopItem (ID: "
               + (shopItem.getItemID() != null ? shopItem.getItemID() : "N/A")
               + ") is missing source FileConfiguration or path. Cannot delete.");
@@ -81,7 +81,7 @@ public class ShopItemsYaml {
     }
     ConfigurationSection section = shopItem.getSection();
     if (section == null) {
-      Main.error(
+      Main.severe(
           "ShopItem (ID: "
               + (shopItem.getItemID() != null ? shopItem.getItemID() : "N/A")
               + ") has a null section. Cannot delete.");
@@ -121,14 +121,14 @@ public class ShopItemsYaml {
     if (shopItem.getSource() == null
         || shopItem.getSource().first() == null
         || shopItem.getSource().second() == null) {
-      Main.error(
+      Main.severe(
           "ShopItem (ID: "
               + (shopItem.getItemID() != null ? shopItem.getItemID() : "N/A")
               + ") is missing source FileConfiguration or path. Cannot save.");
       return;
     }
     if (shopItem.getSection() == null) {
-      Main.error(
+      Main.severe(
           "ShopItem (ID: "
               + (shopItem.getItemID() != null ? shopItem.getItemID() : "N/A")
               + ") has a null section. Cannot save properly. It might need to be created first.");
