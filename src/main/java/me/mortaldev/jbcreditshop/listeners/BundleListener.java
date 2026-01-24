@@ -14,6 +14,12 @@ import org.bukkit.inventory.ItemStack;
 
 public class BundleListener implements Listener {
 
+  private final BundleManager bundleManager;
+
+  public BundleListener(BundleManager bundleManager) {
+    this.bundleManager = bundleManager;
+  }
+
   @EventHandler
   public void onRightClick(PlayerInteractEvent event) {
     EquipmentSlot hand = event.getHand();
@@ -33,11 +39,11 @@ public class BundleListener implements Listener {
       return;
     }
     event.setCancelled(true);
-    BundleManager.getInstance()
+    bundleManager
         .getByID(bundleID)
         .ifPresentOrElse(
             (bundle) -> {
-              boolean b = BundleManager.getInstance().giveBundleItems(player, bundle);
+              boolean b = bundleManager.giveBundleItems(player, bundle);
               if (!b) {
                 return;
               }

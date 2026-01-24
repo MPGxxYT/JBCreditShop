@@ -8,12 +8,13 @@ import me.mortaldev.crudapi.CRUD;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.records.Pair;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
+import me.mortaldev.jbcreditshop.yaml.core.YamlPersistable;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 
-public class Shop implements CRUD.Identifiable {
+public class Shop implements CRUD.Identifiable, YamlPersistable {
 
   private Pair<FileConfiguration, String> source;
   private ConfigurationSection section;
@@ -32,18 +33,22 @@ public class Shop implements CRUD.Identifiable {
   private int size;
   private HashMap<Integer, String> filler;
 
+  @Override
   public Pair<FileConfiguration, String> getSource() {
     return source;
   }
 
+  @Override
   public void setSource(Pair<FileConfiguration, String> source) {
     this.source = source;
   }
 
+  @Override
   public ConfigurationSection getSection() {
     return section;
   }
 
+  @Override
   public void setSection(ConfigurationSection section) {
     this.section = section;
   }
@@ -52,8 +57,13 @@ public class Shop implements CRUD.Identifiable {
     return shopID;
   }
 
-  @Override
+  @Deprecated
   public String getID() {
+    return getId();
+  }
+
+  @Override
+  public String getId() {
     return shopID;
   }
 

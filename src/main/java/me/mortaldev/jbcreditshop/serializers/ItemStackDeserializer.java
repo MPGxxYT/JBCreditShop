@@ -15,7 +15,7 @@ public class ItemStackDeserializer extends JsonDeserializer<ItemStack> {
       throws IOException {
     String serialized = jsonParser.getValueAsString();
     if (serialized == null || serialized.isEmpty()) {
-      Main.log("Failed to deserialize ItemStack!");
+      Main.warn("Failed to deserialize ItemStack!");
       return null;
     }
     return ItemStackHelper.deserialize(serialized);

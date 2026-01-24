@@ -3,7 +3,9 @@ package me.mortaldev.jbcreditshop.modules;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import me.mortaldev.jbcreditshop.menus.styled.AutoStyleMenu;
+
+import me.mortaldev.jbcreditshop.menus.basicmenu.MenuData;
+import me.mortaldev.jbcreditshop.menus.styled.AutoStyleMenuOld;
 import me.mortaldev.jbcreditshop.menus.styled.CustomStyleMenu;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.jbcreditshop.yaml.ShopsYaml;
@@ -69,7 +71,7 @@ public class ShopManager {
     switch (shop.getStyle()) {
       case CUSTOM -> GUIManager.getInstance().openGUI(new CustomStyleMenu(shop, adminMode), player);
       case AUTO -> GUIManager.getInstance()
-          .openGUI(new AutoStyleMenu(shop, adminMode, new MenuData()), player);
+          .openGUI(new AutoStyleMenuOld(shop, adminMode, new MenuData()), player);
     }
   }
 

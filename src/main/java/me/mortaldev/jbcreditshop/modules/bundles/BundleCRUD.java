@@ -3,25 +3,13 @@ package me.mortaldev.jbcreditshop.modules.bundles;
 import me.mortaldev.crudapi.CRUD;
 import me.mortaldev.crudapi.CRUDAdapters;
 import me.mortaldev.crudapi.handlers.Jackson;
-import me.mortaldev.jbcreditshop.Main;
-import me.mortaldev.jbcreditshop.serializers.ItemStackDeserializer;
-import me.mortaldev.jbcreditshop.serializers.ItemStackSerializer;
-import org.bukkit.inventory.ItemStack;
 
 public class BundleCRUD extends CRUD<Bundle> {
+  private final String storagePath;
 
-  private static final String PATH = Main.getInstance().getDataFolder() + "/bundles/";
-
-  private static class Singleton {
-    private static final BundleCRUD INSTANCE = new BundleCRUD();
-  }
-
-  public static synchronized BundleCRUD getInstance() {
-    return Singleton.INSTANCE;
-  }
-
-  private BundleCRUD() {
-    super(Jackson.getInstance());
+  public BundleCRUD(String storagePath, Jackson handler) {
+    super(handler);
+    this.storagePath = storagePath;
   }
 
   @Override
@@ -31,13 +19,11 @@ public class BundleCRUD extends CRUD<Bundle> {
 
   @Override
   public CRUDAdapters getCRUDAdapters() {
-    return new CRUDAdapters()
-        .addSerializer(ItemStack.class, new ItemStackSerializer())
-        .addDeserializer(ItemStack.class, new ItemStackDeserializer());
+    return new CRUDAdapters();
   }
 
   @Override
   public String getPath() {
-    return PATH;
+    return storagePath;
   }
 }

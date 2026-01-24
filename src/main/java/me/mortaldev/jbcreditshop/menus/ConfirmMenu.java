@@ -18,15 +18,58 @@ public class ConfirmMenu extends InventoryGUI {
   private final ItemStack centerItem;
   private final String prompt;
 
+  private ConfirmMenu(Builder builder) {
+    this.confirmConsumer = builder.confirmConsumer;
+    this.cancelConsumer = builder.cancelConsumer;
+    this.centerItem = builder.centerItem;
+    this.prompt = builder.prompt;
+  }
+
+  @Deprecated
   public ConfirmMenu(
       String prompt,
       ItemStack centerItem,
       Consumer<Player> confirmConsumer,
       Consumer<Player> cancelConsumer) {
+    this.prompt = prompt;
+    this.centerItem = centerItem;
     this.confirmConsumer = confirmConsumer;
     this.cancelConsumer = cancelConsumer;
-    this.centerItem = centerItem;
-    this.prompt = prompt;
+  }
+
+  public static class Builder {
+    private Consumer<Player> confirmConsumer;
+    private Consumer<Player> cancelConsumer;
+    private ItemStack centerItem;
+    private String prompt;
+
+    public Builder confirm(Consumer<Player> confirmConsumer) {
+      this.confirmConsumer = confirmConsumer;
+      return this;
+    }
+
+    public Builder cancel(Consumer<Player> cancelConsumer) {
+      this.cancelConsumer = cancelConsumer;
+      return this;
+    }
+
+    public Builder centerItem(ItemStack centerItem) {
+      this.centerItem = centerItem;
+      return this;
+    }
+
+    public Builder prompt(String prompt) {
+      this.prompt = prompt;
+      return this;
+    }
+
+    public ConfirmMenu build() {
+      return new ConfirmMenu(this);
+    }
+  }
+
+  public static Builder builder() {
+    return new Builder();
   }
 
   @Override

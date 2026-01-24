@@ -1,24 +1,15 @@
 package me.mortaldev.jbcreditshop.modules.transaction;
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import me.mortaldev.crudapi.CRUD;
 import me.mortaldev.crudapi.CRUDAdapters;
 import me.mortaldev.crudapi.handlers.Jackson;
-import me.mortaldev.jbcreditshop.Main;
 
 public class TransactionLogCRUD extends CRUD<TransactionLog> {
-  private static final String PATH = Main.getInstance().getDataFolder() + "/transactions/";
+  private final String storagePath;
 
-  private static class Singleton {
-    private static final TransactionLogCRUD INSTANCE = new TransactionLogCRUD();
-  }
-
-  public static synchronized TransactionLogCRUD getInstance() {
-    return Singleton.INSTANCE;
-  }
-
-  private TransactionLogCRUD() {
-    super(Jackson.getInstance());
+  public TransactionLogCRUD(String storagePath, Jackson handler) {
+    super(handler);
+    this.storagePath = storagePath;
   }
 
   @Override
@@ -28,13 +19,11 @@ public class TransactionLogCRUD extends CRUD<TransactionLog> {
 
   @Override
   public CRUDAdapters getCRUDAdapters() {
-    CRUDAdapters crudAdapters = new CRUDAdapters();
-    crudAdapters.addModule(new JavaTimeModule());
-    return crudAdapters;
+    return new CRUDAdapters();
   }
 
   @Override
   public String getPath() {
-    return PATH;
+    return storagePath;
   }
 }

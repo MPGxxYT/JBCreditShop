@@ -6,18 +6,11 @@ import me.mortaldev.crudapi.handlers.Jackson;
 import me.mortaldev.jbcreditshop.Main;
 
 public class PlayerDataCRUD extends CRUD<PlayerData> {
-  private static final String PATH = Main.getInstance().getDataFolder() + "/playerdata/";
+  private final String storagePath;
 
-  private static class Singleton {
-    private static final PlayerDataCRUD INSTANCE = new PlayerDataCRUD();
-  }
-
-  public static synchronized PlayerDataCRUD getInstance() {
-    return Singleton.INSTANCE;
-  }
-
-  private PlayerDataCRUD() {
-    super(Jackson.getInstance());
+  public PlayerDataCRUD(String storagePath, Jackson handler) {
+    super(handler);
+    this.storagePath = storagePath;
   }
 
   @Override
@@ -32,6 +25,6 @@ public class PlayerDataCRUD extends CRUD<PlayerData> {
 
   @Override
   public String getPath() {
-    return PATH;
+    return storagePath;
   }
 }

@@ -2,7 +2,7 @@ package me.mortaldev.jbcreditshop.menus.bundle;
 
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.listeners.ChatListener;
-import me.mortaldev.jbcreditshop.modules.MenuData;
+import me.mortaldev.jbcreditshop.menus.basicmenu.MenuData;
 import me.mortaldev.jbcreditshop.modules.bundles.Bundle;
 import me.mortaldev.jbcreditshop.modules.bundles.BundleManager;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
@@ -21,10 +21,12 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Collections;
 
 public class BundleEditorMenu extends InventoryGUI {
+  private final BundleManager bundleManager;
   private final Bundle bundle;
 
   public BundleEditorMenu(Bundle bundle) {
     this.bundle = bundle;
+    this.bundleManager = Main.getInstance().getPluginServices().bundleManager();
     allowBottomInventoryClick(true);
   }
 
@@ -81,7 +83,7 @@ public class BundleEditorMenu extends InventoryGUI {
                           String textEntry = stateSnapshot.getText();
                           textEntry = textEntry.trim();
                           bundle.setDescription(textEntry);
-                          BundleManager.getInstance().update(bundle, true);
+                          bundleManager.update(bundle, true);
                           GUIManager.getInstance().openGUI(new BundleEditorMenu(bundle), player);
                         }
                         return Collections.emptyList();
@@ -120,7 +122,7 @@ public class BundleEditorMenu extends InventoryGUI {
                       return;
                     }
                     bundle.setName(text);
-                    BundleManager.getInstance().update(bundle, true);
+                    bundleManager.update(bundle, true);
                     GUIManager.getInstance().openGUI(new BundleEditorMenu(bundle), player);
                   });
             });
@@ -145,14 +147,14 @@ public class BundleEditorMenu extends InventoryGUI {
                 return;
               }
               bundle.addItem(cursor.clone());
-              BundleManager.getInstance().update(bundle, true);
+              bundleManager.update(bundle, true);
               GUIManager.getInstance().openGUI(new BundleEditorMenu(bundle), player);
             });
   }
 
   private InventoryButton BundleItemButton(ItemStack item) {
     return new InventoryButton()
-        .creator(player -> BundleManager.getInstance().getDisplayOfBundleItem(item.clone()))
+        .creator(player -> bundleManager.getDisplayOfBundleItem(item.clone()))
         .consumer(
             event -> {
               Player player = (Player) event.getWhoClicked();
@@ -160,7 +162,7 @@ public class BundleEditorMenu extends InventoryGUI {
                 player.getInventory().addItem(item);
               } else if (event.isRightClick()) {
                 bundle.removeItem(item);
-                BundleManager.getInstance().update(bundle, true);
+                bundleManager.update(bundle, true);
                 GUIManager.getInstance().openGUI(new BundleEditorMenu(bundle), player);
               }
             });

@@ -51,9 +51,14 @@ public class PlayerData implements CRUD.Identifiable {
     return purchasedItems;
   }
 
+  @Deprecated
+  public String getID() {
+    return UUID;
+  }
+
   @Override
   @JsonProperty("UUID")
-  public String getID() {
+  public String getId() {
     return UUID;
   }
 }

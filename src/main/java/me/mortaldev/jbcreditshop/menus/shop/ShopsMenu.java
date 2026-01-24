@@ -4,8 +4,6 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import me.mortaldev.jbcreditshop.Main;
-import me.mortaldev.jbcreditshop.menus.BasicMenu;
-import me.mortaldev.jbcreditshop.modules.MenuData;
 import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.modules.ShopManager;
 import me.mortaldev.jbcreditshop.utils.TextUtil;

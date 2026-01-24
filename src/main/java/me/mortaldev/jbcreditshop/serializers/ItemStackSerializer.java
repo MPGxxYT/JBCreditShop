@@ -16,7 +16,7 @@ public class ItemStackSerializer extends JsonSerializer<ItemStack> {
       throws IOException {
     if (itemStack == null) {
       jsonGenerator.writeNull();
-      Main.log("Writing null ItemStack.");
+      Main.warn("Writing null ItemStack.");
     } else {
       String serialized = ItemStackHelper.serialize(itemStack);
       jsonGenerator.writeString(serialized);

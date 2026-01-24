@@ -17,7 +17,6 @@ public class YamlReader {
   }
 
   private YamlReader() {}
-
   public HashMap<FileConfiguration, String> getConfigs(String path) {
     File dir = new File(Main.getInstance().getDataFolder() + path);
     if (!dir.exists()) {
@@ -29,14 +28,14 @@ public class YamlReader {
     }
     HashMap<FileConfiguration, String> configs = new HashMap<>();
     for (File file : files) {
-      YAML yaml = Main.getYAML();
-      FileConfiguration config = yaml.getConfig(path + file.getName());
+      FileConfiguration config =
+          YAML.getInstance().getConfig(Main.getInstance(), path + file.getName());
       if (config == null) {
         continue;
       }
       configs.put(config, path + file.getName());
     }
-    Main.log("Found " + configs.size() + " config(s) in " + path);
+    Main.info("Found " + configs.size() + " config(s) in " + path);
     return configs;
   }
 }

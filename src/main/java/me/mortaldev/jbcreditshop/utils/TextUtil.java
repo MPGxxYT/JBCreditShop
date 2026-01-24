@@ -4,7 +4,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.records.Pair;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -12,17 +11,46 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.ChatColor;
 
 /**
  * * Utility class for handling text formatting and manipulation using MiniMessage. Provides methods
  * for formatting strings, removing color and decoration tags, serializing and deserializing
  * components, and converting between MiniMessage components and legacy color code strings.
  *
- * <p>v2.0.0
+ * <p>v2.0.3
  *
- * <p>Remade formatting system.
+ * <p>Optimized version with pattern caching and enum lookups.
  */
 public class TextUtil {
+
+  // ========== CACHED PATTERNS FOR PERFORMANCE ==========
+  private static final Pattern TAG_OR_TEXT_PATTERN = Pattern.compile("(<[^>]+>)|([^<]+)");
+  private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("[0-9a-fA-F]{6}");
+  private static final Pattern HEX_TAG_PATTERN = Pattern.compile("<#.{6}>|&#.{6}");
+  private static final Pattern NON_WORD_CHARS = Pattern.compile("\\W+");
+  private static final Pattern MULTIPLE_RESET_PATTERN = Pattern.compile("(&r)+");
+
+  // ========== CACHED INSTANCES ==========
+  private static final GsonComponentSerializer GSON_SERIALIZER = GsonComponentSerializer.gson();
+  private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+  private static final PlainTextComponentSerializer PLAIN_TEXT_SERIALIZER =
+      PlainTextComponentSerializer.plainText();
+
+  // ========== CONSTANTS ==========
+  private static final String DEFAULT_COLOR_KEY = "f"; // Minecraft white
+  private static final String DEFAULT_FILE_FORMAT = "formatted_string";
+
+  /**
+   * Translates a string using an alternate color code character into a string that uses the
+   * internal {@link ChatColor#COLOR_CHAR} code.
+   *
+   * @param textToTranslate the string to translate.
+   * @return the translated string.
+   */
+  public static String colorize(String textToTranslate) {
+    return ChatColor.translateAlternateColorCodes('&', textToTranslate);
+  }
 
   /**
    * Formats the given string by trimming, removing edge special characters, and replacing non-word
@@ -32,23 +60,21 @@ public class TextUtil {
    * @return the formatted string
    */
   public static String fileFormat(String string) {
-    // Trim leading and trailing whitespace
-    string = string.trim();
-
-    // Remove leading and trailing special characters (like ., -, _, etc.)
-    string = string.replaceAll("^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "");
-
-    // Replace any sequence of non-word characters with a single underscore
-    string = string.replaceAll("\\W+", "_");
-
-    // Handle potential empty string after formatting
-    if (string.isEmpty()) {
-      // Return a default or throw an exception, depending on desired behavior
-      // For now, returning a simple default like "formatted_string"
-      return "formatted_string";
+    if (string == null || string.isEmpty()) {
+      return DEFAULT_FILE_FORMAT;
     }
 
-    return string;
+    // Trim and replace non-word characters with underscores
+    String result = NON_WORD_CHARS.matcher(string.trim()).replaceAll("_");
+
+    // Remove leading/trailing underscores
+    result = result.replaceAll("^_+|_+$", "");
+
+    return result.isEmpty() ? DEFAULT_FILE_FORMAT : result;
+  }
+
+  public static String removeDecorAndColor(String string) {
+    return removeColors(removeDecoration(string));
   }
 
   /**
@@ -58,10 +84,30 @@ public class TextUtil {
    * @return the string with decoration tags removed
    */
   public static String removeDecoration(String string) {
+    return removeKeys(string, Decorations.getKeys());
+  }
+
+  /**
+   * Removes color tags from the given string.
+   *
+   * @param string the string from which to remove color tags
+   * @return the string with color tags removed
+   */
+  public static String removeColors(String string) {
+    String result = removeKeys(string, Colors.getKeys());
+    return HEX_TAG_PATTERN.matcher(result).replaceAll("");
+  }
+
+  /**
+   * Helper method to remove legacy format keys from a string.
+   *
+   * @param string the input string
+   * @param keys the keys to remove
+   * @return the string with keys removed
+   */
+  private static String removeKeys(String string, String[] keys) {
     StringBuilder editString = new StringBuilder(string);
-    for (String key : Decorations.getKeys()) {
-      // Avoid creating new strings in loop for replacement if possible
-      // String.replace creates a new string. For StringBuilder, use its replace.
+    for (String key : keys) {
       int index;
       String legacyKey = "&" + key;
       while ((index = editString.indexOf(legacyKey)) != -1) {
@@ -72,32 +118,13 @@ public class TextUtil {
   }
 
   /**
-   * Removes color tags from the given string.
-   *
-   * @param string the string from which to remove color tags
-   * @return the string with color tags removed
-   */
-  public static String removeColors(String string) {
-    StringBuilder editString = new StringBuilder(string);
-    for (String key : Colors.getKeys()) {
-      int index;
-      String legacyKey = "&" + key;
-      while ((index = editString.indexOf(legacyKey)) != -1) {
-        editString.delete(index, index + legacyKey.length());
-      }
-    }
-    // For hex, regex is fine on the final string
-    return editString.toString().replaceAll("<#.{6}>", "").replaceAll("&#.{6}", "");
-  }
-
-  /**
    * Serializes a Component object to a JSON string using GsonComponentSerializer.
    *
    * @param component The Component object to serialize.
    * @return The serialized JSON representation of the Component object.
    */
   public static String serializeComponent(Component component) {
-    return GsonComponentSerializer.gson().serialize(component);
+    return GSON_SERIALIZER.serialize(component);
   }
 
   public static String serializeComponent(String string) {
@@ -105,23 +132,15 @@ public class TextUtil {
   }
 
   public static Component deserializeComponent(String string) {
-    return GsonComponentSerializer.gson().deserialize(string);
+    return GSON_SERIALIZER.deserialize(string);
   }
 
   public static String componentToString(Component component) {
-    return PlainTextComponentSerializer.plainText().serialize(component);
+    return PLAIN_TEXT_SERIALIZER.serialize(component);
   }
 
   public static String chatComponentToString(Component component) {
     return component instanceof TextComponent ? ((TextComponent) component).content() : "";
-  }
-
-  /**
-   * @deprecated This method is redundant and will be removed. Use {@link #format(String)} instead.
-   */
-  @Deprecated
-  public static Component format(String str, boolean deprecated) {
-    return format(str);
   }
 
   /**
@@ -135,27 +154,23 @@ public class TextUtil {
    */
   public static Component format(String str) {
     if (str == null) {
-      return Component
-          .empty(); // Or throw new IllegalArgumentException("Input string cannot be null.");
+      return Component.empty();
     }
-    Main.debugLog("str: " + str);
+    //    Main.debugLog("str: " + str);
     // 1. Process custom "##key:value" parameters and convert legacy codes selectively.
     //    asParam will now handle calling convertLegacyToMiniMessage internally.
     String finalMiniMessageString = asParam(str);
 
-    Main.debugLog("final: " + finalMiniMessageString);
+    //    Main.debugLog("final: " + finalMiniMessageString);
     // 2. Deserialize the fully formed MiniMessage string into a Component.
-    return MiniMessage.miniMessage()
+    return MINI_MESSAGE
         .deserialize(finalMiniMessageString)
         .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
   }
 
   /**
-   * Converts a string with legacy Minecraft formatting codes (& or §) into a MiniMessage string. -
-   * Color codes (e.g., &c) are converted to <reset><color_name> (e.g., <reset><red>). - Hex color
-   * codes (e.g., &#RRGGBB) are converted to <#RRGGBB>. - Decoration codes (e.g., &l) are converted
-   * to <decoration_name> (e.g., <bold>). - &r is converted to <reset>. - &nl is converted to
-   * <newline>. - Unrecognized & codes are passed through literally.
+   * Converts a string with legacy Minecraft formatting codes (& or §) into a MiniMessage string.
+   * Uses optimized enum lookups instead of iteration.
    *
    * @param legacyText The string containing legacy formatting codes.
    * @return A string with MiniMessage tags.
@@ -169,7 +184,7 @@ public class TextUtil {
     String textToProcess = legacyText.replace('§', '&');
 
     String activeColorTag = null;
-    List<Decorations> activeDecorations = new ArrayList<>();
+    EnumSet<Decorations> activeDecorations = EnumSet.noneOf(Decorations.class);
 
     for (int i = 0; i < textToProcess.length(); i++) {
       char currentChar = textToProcess.charAt(i);
@@ -178,14 +193,10 @@ public class TextUtil {
           char nextChar = textToProcess.charAt(i + 1);
           boolean consumed = false;
 
-          // REMOVED &nl special handling block
-          // if (nextChar == 'n' /* ... &nl specific checks ... */ ) { /* ... */ }
-
           // Try hex &#RRGGBB (8 chars: &#RRGGBB)
-          if (nextChar == '#'
-              && i + 7 < textToProcess.length()) { // Check this before single char codes
+          if (nextChar == '#' && i + 7 < textToProcess.length()) {
             String hexCandidate = textToProcess.substring(i + 2, i + 8);
-            if (hexCandidate.matches("[0-9a-fA-F]{6}")) {
+            if (HEX_COLOR_PATTERN.matcher(hexCandidate).matches()) {
               closeAllActiveStyles(out, activeColorTag, activeDecorations);
               activeColorTag = "<#" + hexCandidate + ">";
               out.append(activeColorTag);
@@ -195,13 +206,7 @@ public class TextUtil {
           }
 
           if (!consumed) {
-            Colors matchedColor = null;
-            for (Colors color : Colors.values()) {
-              if (color.getKey().charAt(0) == nextChar) {
-                matchedColor = color;
-                break;
-              }
-            }
+            Colors matchedColor = Colors.fromKey(nextChar);
 
             if (matchedColor != null) {
               closeAllActiveStyles(out, activeColorTag, activeDecorations);
@@ -210,22 +215,15 @@ public class TextUtil {
               i += 1;
               consumed = true;
             } else {
-              Decorations matchedDecoration = null;
-              for (Decorations decoration : Decorations.values()) {
-                if (decoration.getKey().charAt(0) == nextChar) {
-                  matchedDecoration = decoration;
-                  break;
-                }
-              }
+              Decorations matchedDecoration = Decorations.fromKey(nextChar);
+
               if (matchedDecoration != null) {
                 if (matchedDecoration == Decorations.RESET) {
                   closeAllActiveStyles(out, activeColorTag, activeDecorations);
                   activeColorTag = null;
                 } else {
-                  if (!activeDecorations.contains(matchedDecoration)) {
-                    activeDecorations.add(matchedDecoration);
-                  }
-                  out.append("<").append(matchedDecoration.getValue()).append(">");
+                  activeDecorations.add(matchedDecoration); // EnumSet handles duplicates
+                  out.append('<').append(matchedDecoration.getValue()).append('>');
                 }
                 i += 1;
                 consumed = true;
@@ -249,10 +247,19 @@ public class TextUtil {
     return out.toString();
   }
 
+  /**
+   * Closes all active styles (decorations and colors) in the output.
+   *
+   * @param out the output StringBuilder
+   * @param activeColorTag the currently active color tag
+   * @param activeDecorations the currently active decorations
+   */
   private static void closeAllActiveStyles(
-      StringBuilder out, String activeColorTag, List<Decorations> activeDecorations) {
-    for (int i = activeDecorations.size() - 1; i >= 0; i--) {
-      out.append("</").append(activeDecorations.get(i).getValue()).append(">");
+      StringBuilder out, String activeColorTag, EnumSet<Decorations> activeDecorations) {
+    // Close decorations in reverse order (LIFO)
+    List<Decorations> decorationList = new ArrayList<>(activeDecorations);
+    for (int i = decorationList.size() - 1; i >= 0; i--) {
+      out.append("</").append(decorationList.get(i).getValue()).append('>');
     }
     activeDecorations.clear();
 
@@ -282,30 +289,26 @@ public class TextUtil {
    * @return A string with legacy color and decoration codes.
    */
   public static String deformat(Component component) {
-    String miniMessageStr = MiniMessage.miniMessage().serialize(component);
-    //    System.out.println("miniMessageStr = " + miniMessageStr);
+    String miniMessageStr = MINI_MESSAGE.serialize(component);
 
     StringBuilder legacyResult = new StringBuilder();
 
     // Style state trackers for the *last emitted* legacy codes
-    String lastEmittedLegacyColorKey = "f"; // Default Minecraft white's key
+    String lastEmittedLegacyColorKey = DEFAULT_COLOR_KEY;
     EnumSet<Decorations> lastEmittedDecorations = EnumSet.noneOf(Decorations.class);
 
     // Style stack for MiniMessage processing
-    Deque<String> colorTagStack =
-        new ArrayDeque<>(); // Stores MiniMessage color tags like "<gray>", "<#RRGGBB>"
+    Deque<String> colorTagStack = new ArrayDeque<>();
     colorTagStack.push("<white>"); // Base default color
 
     // Current decoration states based on MiniMessage tags encountered
     Map<Decorations, Boolean> currentDecorationStates = new EnumMap<>(Decorations.class);
     for (Decorations d : Decorations.values()) {
-      // Set initial decoration states (e.g., italic is often false by default in Components)
       currentDecorationStates.put(d, false);
     }
 
-    // Regex to find tags or text: group 1 is tag, group 2 is text
-    Pattern pattern = Pattern.compile("(<[^>]+>)|([^<]+)");
-    Matcher matcher = pattern.matcher(miniMessageStr);
+    // Use cached pattern
+    Matcher matcher = TAG_OR_TEXT_PATTERN.matcher(miniMessageStr);
 
     while (matcher.find()) {
       String tag = matcher.group(1);
@@ -479,13 +482,9 @@ public class TextUtil {
       }
     }
 
-    // Final cleanup for multiple &r might still be good if resets were spammed
+    // Final cleanup for multiple &r using cached pattern
     String finalStr = legacyResult.toString();
-    finalStr = finalStr.replaceAll("(&r)+", "&r");
-    // Optional: further cleanup like "&f&r" -> "&r" if &f is default reset color.
-
-    //    System.out.println("finalStr = " + finalStr);
-    return finalStr;
+    return MULTIPLE_RESET_PATTERN.matcher(finalStr).replaceAll("&r");
   }
 
   // Helper to get legacy color code string (e.g., "&f", "&#RRGGBB")
@@ -513,7 +512,7 @@ public class TextUtil {
   }
 
   private static String getDefaultLegacyColorKey() {
-    return "f"; // Minecraft's default (white)
+    return DEFAULT_COLOR_KEY;
   }
 
   private static String asParam(String rawLegacyString) {
@@ -525,9 +524,11 @@ public class TextUtil {
 
     if (rawSegments.length == 0) return "";
 
-    // Initialize currentAccumulatedText with the MiniMessage version of the first segment
+    // Build the final result piece by piece
     StringBuilder resultBuilder = new StringBuilder(convertLegacyToMiniMessage(rawSegments[0]));
 
+    // Track the current text segment that actions should be applied to
+    StringBuilder currentSegmentBuilder = new StringBuilder();
     List<Pair<Types, String>> activeNestableActions = new ArrayList<>();
 
     for (int i = 1; i < rawSegments.length; i++) {
@@ -536,16 +537,6 @@ public class TextUtil {
       if (currentRawSegment.isEmpty()
           && i < rawSegments.length - 1
           && rawSegments[i + 1].isEmpty()) {
-        // Handle "####" case which results in an empty segment between two other empty segments if
-        // they were delimiters.
-        // Or if it's just "text####tag", the middle empty segment.
-        // This might need more robust handling if "##" can be escaped in text.
-        // For now, if it's an empty segment not at the end, and not followed by another empty one
-        // (which would be from "text##")
-        // we might append "##" if it's meant to be literal, or just continue.
-        // Assuming "##" is purely a delimiter, an empty segment means "text####tag" -> text, "",
-        // tag.
-        // The "" part doesn't correspond to user text.
         continue;
       }
 
@@ -556,53 +547,56 @@ public class TextUtil {
         String legacyTagValue = currentRawSegment.substring(4);
 
         if (isNestableActionType(type)) {
+          // Accumulate nestable actions to apply to the current segment
           activeNestableActions.add(new Pair<>(type, legacyTagValue));
         } else {
-          // Non-nestable tag encountered, process any pending nestable actions first
+          // Non-nestable tag: finalize current segment first, then apply this tag to everything
           if (!activeNestableActions.isEmpty()) {
-            String processedNestable =
-                applyNestedActionTags(resultBuilder.toString(), activeNestableActions);
-            resultBuilder.setLength(0); // Clear builder
-            resultBuilder.append(processedNestable); // Append processed part
+            String processedSegment =
+                applyNestedActionTags(currentSegmentBuilder.toString(), activeNestableActions);
+            resultBuilder.append(processedSegment);
+            currentSegmentBuilder.setLength(0);
             activeNestableActions.clear();
+          } else if (!currentSegmentBuilder.isEmpty()) {
+            resultBuilder.append(currentSegmentBuilder);
+            currentSegmentBuilder.setLength(0);
           }
-          // Apply the current non-nestable tag
+
+          // Apply the current non-nestable tag to all accumulated result
           String processedNonNestable =
               performTypeValueReplacement(type.getKey(), legacyTagValue, resultBuilder.toString());
           resultBuilder.setLength(0);
           resultBuilder.append(processedNonNestable);
         }
       } else { // Segment is not a recognized tag, so it's plain text.
-        // Process any pending nestable actions before appending this new text
+        // Process any pending nestable actions on the previous segment first
         if (!activeNestableActions.isEmpty()) {
-          String processedNestable =
-              applyNestedActionTags(resultBuilder.toString(), activeNestableActions);
-          resultBuilder.setLength(0);
-          resultBuilder.append(processedNestable);
+          String processedSegment =
+              applyNestedActionTags(currentSegmentBuilder.toString(), activeNestableActions);
+          resultBuilder.append(processedSegment);
+          currentSegmentBuilder.setLength(0);
           activeNestableActions.clear();
+        } else if (!currentSegmentBuilder.isEmpty()) {
+          // Flush current segment to result
+          resultBuilder.append(currentSegmentBuilder);
+          currentSegmentBuilder.setLength(0);
         }
-        // Append the MiniMessage version of this plain text segment
-        // If currentRawSegment came from splitting "text1##text2", then "text2" is
-        // currentRawSegment.
-        // If it was "text1##", then currentRawSegment might be empty if it's the last part.
+
+        // Start a new segment with this text
         if (!currentRawSegment.isEmpty()
             || (i == rawSegments.length - 1 && rawLegacyString.endsWith("##"))) {
-          // The check for rawLegacyString.endsWith("##") handles cases like "text##" where the last
-          // segment is empty
-          // but represents the content after the last delimiter.
-          // However, split with -1 already keeps trailing empty strings.
-          // So, just convert.
-          resultBuilder.append(convertLegacyToMiniMessage(currentRawSegment));
+          currentSegmentBuilder.append(convertLegacyToMiniMessage(currentRawSegment));
         }
       }
     }
 
-    // Process any remaining nestable actions at the end of the string
+    // Process any remaining nestable actions at the end
     if (!activeNestableActions.isEmpty()) {
-      String processedNestable =
-          applyNestedActionTags(resultBuilder.toString(), activeNestableActions);
-      resultBuilder.setLength(0);
-      resultBuilder.append(processedNestable);
+      String processedSegment =
+          applyNestedActionTags(currentSegmentBuilder.toString(), activeNestableActions);
+      resultBuilder.append(processedSegment);
+    } else if (!currentSegmentBuilder.isEmpty()) {
+      resultBuilder.append(currentSegmentBuilder);
     }
 
     return resultBuilder.toString();
@@ -612,8 +606,16 @@ public class TextUtil {
     if (type == null) return false;
     // Define which types are considered for special nesting (e.g., click/hover)
     return switch (type) {
-      case CHANGE_PAGE, COPY_TO_CLIPBOARD, OPEN_FILE, OPEN_PAGE, RUN_COMMAND, SUGGEST_COMMAND, SHOW_ENTITY, SHOW_ITEM,
-           SHOW_TEXT, INSERT -> // Insert can also be part of nesting
+      case CHANGE_PAGE,
+          COPY_TO_CLIPBOARD,
+          OPEN_FILE,
+          OPEN_PAGE,
+          RUN_COMMAND,
+          SUGGEST_COMMAND,
+          SHOW_ENTITY,
+          SHOW_ITEM,
+          SHOW_TEXT,
+          INSERT -> // Insert can also be part of nesting
           true;
       default -> false;
     };
@@ -682,12 +684,7 @@ public class TextUtil {
   private static boolean typeTakesMiniMessageArgument(Types type) {
     if (type == null) return false;
     // Only types where the #arg# itself is displayed as text and can have formatting
-    if (type == Types.SHOW_TEXT) {// Potentially SHOW_ITEM or SHOW_ENTITY if their args could be MiniMessage strings
-      // (e.g. if item name in ##itm:...## could contain legacy codes)
-      // For now, only SHOW_TEXT is a clear candidate.
-      return true;
-    }
-    return false;
+    return type == Types.SHOW_TEXT;
   }
 
   private static String performTypeValueReplacement(
@@ -763,8 +760,8 @@ public class TextUtil {
     SCORE("scr:", "#input#<score:#arg#>"),
 
     // NBT
-    // ##nbt:block|entity|storage:id:path[:_separator_][:interpret]##
-    // Your health is ##nbt:entity:'@s':Health/##
+    // ##nbt:block|armorStand|storage:id:path[:_separator_][:interpret]##
+    // Your health is ##nbt:armorStand:'@s':Health/##
     NBT("nbt:", "#input#<nbt:#arg#>");
 
     private final String key;
@@ -819,9 +816,14 @@ public class TextUtil {
 
     // Cache for getKeys()
     private static final String[] KEYS_CACHE;
+    // O(1) lookup map for fromKey
+    private static final Map<Character, Decorations> KEY_LOOKUP = new HashMap<>();
 
     static {
       KEYS_CACHE = Arrays.stream(values()).map(Decorations::getKey).toArray(String[]::new);
+      for (Decorations decoration : values()) {
+        KEY_LOOKUP.put(decoration.getKey().charAt(0), decoration);
+      }
     }
 
     Decorations(String key, String value) {
@@ -831,6 +833,16 @@ public class TextUtil {
 
     static String[] getKeys() {
       return KEYS_CACHE;
+    }
+
+    /**
+     * Fast O(1) lookup of decoration by character key.
+     *
+     * @param keyChar the character key
+     * @return the Decorations enum, or null if not found
+     */
+    static Decorations fromKey(char keyChar) {
+      return KEY_LOOKUP.get(keyChar);
     }
 
     String getKey() {
@@ -865,9 +877,14 @@ public class TextUtil {
 
     // Cache for getKeys()
     private static final String[] KEYS_CACHE;
+    // O(1) lookup map for fromKey
+    private static final Map<Character, Colors> KEY_LOOKUP = new HashMap<>();
 
     static {
       KEYS_CACHE = Arrays.stream(values()).map(Colors::getKey).toArray(String[]::new);
+      for (Colors color : values()) {
+        KEY_LOOKUP.put(color.getKey().charAt(0), color);
+      }
     }
 
     Colors(String key, String value) {
@@ -877,6 +894,16 @@ public class TextUtil {
 
     static String[] getKeys() {
       return KEYS_CACHE;
+    }
+
+    /**
+     * Fast O(1) lookup of color by character key.
+     *
+     * @param keyChar the character key
+     * @return the Colors enum, or null if not found
+     */
+    static Colors fromKey(char keyChar) {
+      return KEY_LOOKUP.get(keyChar);
     }
 
     String getKey() {

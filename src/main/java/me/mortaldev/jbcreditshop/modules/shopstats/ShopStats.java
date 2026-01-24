@@ -37,6 +37,6 @@ public record ShopStats(HashMap<LocalDate, StatsHolder> stats) {
     stat.addPurchaseCount(1);
     statsHolder.addStat(stat);
     stats.put(localDate, statsHolder);
-    ShopStatsCRUD.getInstance().save(this);
+    Main.getInstance().getPluginServices().require(ShopStatsCRUD.class).save(this);
   }
 }

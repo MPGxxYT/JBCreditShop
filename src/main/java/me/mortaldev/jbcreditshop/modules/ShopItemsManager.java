@@ -27,8 +27,9 @@ import org.bukkit.inventory.ItemStack;
 public class ShopItemsManager {
 
   public static final String NOT_ENOUGH_SPACE_MESSAGE = "&cNot enough space in your inventory.";
-  Set<ShopItem> shopItems = new HashSet<>();
-  HashMap<String, Set<ShopItem>> shopItemsByShopID = new HashMap<>();
+  private Set<ShopItem> shopItems = new HashSet<>();
+  private final HashMap<String, Set<ShopItem>> shopItemsByShopID = new HashMap<>();
+  private final PlayerDataManager playerDataManager;
 
   private static class Singleton {
     private static final ShopItemsManager INSTANCE = new ShopItemsManager();
@@ -38,7 +39,9 @@ public class ShopItemsManager {
     return Singleton.INSTANCE;
   }
 
-  private ShopItemsManager() {}
+  private ShopItemsManager() {
+    this.playerDataManager = Main.getInstance().getPluginServices().playerDataManager();
+  }
 
   public ItemStack getBasicShopMenuStack(ShopItem shopItem) {
     Material display = shopItem.getDisplayMaterial();
@@ -103,7 +106,11 @@ public class ShopItemsManager {
       builder
           .addLore("&3&lID: &f" + shopItem.getItemID())
           .addLore("&3&lShop ID: &f" + shopItem.getShopID())
-          .addLore("&3&lGroup: &f" + (shopItem.getGroup() == null || shopItem.getGroup().isEmpty() ? "&7( NONE )" : shopItem.getGroup()));
+          .addLore(
+              "&3&lGroup: &f"
+                  + (shopItem.getGroup() == null || shopItem.getGroup().isEmpty()
+                      ? "&7( NONE )"
+                      : shopItem.getGroup()));
     }
     String formattedPrice = formatPrice(shopItem.getPrice());
     if (adminMode) {
@@ -149,7 +156,7 @@ public class ShopItemsManager {
           }
         } else if (shopItem.isOneTimePurchase()) {
           PlayerData playerData =
-              PlayerDataManager.getInstance()
+              playerDataManager
                   .getByID(player.getUniqueId().toString())
                   .orElse(PlayerData.create(player.getUniqueId().toString()));
           if (playerData.hasPurchasedItem(shopItem)) {
@@ -282,6 +289,14 @@ public class ShopItemsManager {
     return items;
   }
 
+  public Set<ShopItem> getItemsByShop(Shop shop, boolean sortByShop) {
+    return getItemsByShopID(shop.getShopID(), sortByShop);
+  }
+
+  public Set<ShopItem> getItemsByShop(Shop shop) {
+    return getItemsByShopID(shop.getShopID(), false);
+  }
+
   public void deleteShopItem(ShopItem shopItem) {
     shopItems.removeIf(entry -> entry.getItemID().equals(shopItem.getItemID()));
     ShopItemsYaml.getInstance().delete(shopItem);
@@ -328,7 +343,7 @@ public class ShopItemsManager {
     }
     if (shopItem.isOneTimePurchase()) {
       PlayerData playerData =
-          PlayerDataManager.getInstance()
+          playerDataManager
               .getByID(player.getUniqueId().toString())
               .orElse(PlayerData.create(player.getUniqueId().toString()));
       if (playerData.hasPurchasedItem(shopItem)) {
@@ -347,7 +362,7 @@ public class ShopItemsManager {
       return;
     }
     PlayerData playerData =
-        PlayerDataManager.getInstance()
+        playerDataManager
             .getByID(player.getUniqueId().toString())
             .orElse(PlayerData.create(player.getUniqueId().toString()));
     if (shopItem.isOneTimePurchase()) {
@@ -385,18 +400,26 @@ public class ShopItemsManager {
       luckPerms.getUserManager().saveUser(user);
     }
     int price = getDiscountPrice(shopItem);
-    // Transaction Logging
+    // ========== Transaction Logging ==========
     Transaction transaction =
         new Transaction(player.getUniqueId().toString(), shopItem.getItemID(), price);
-    TransactionLogManager.getInstance().addTransaction(transaction);
+    Main.getInstance()
+        .getPluginServices()
+        .require(TransactionLogManager.class)
+        .addTransaction(transaction);
     // **************************
-    ShopStatsCRUD.getInstance().get().addPurchase(shopItem.getItemID());
+    Main.getInstance()
+        .getPluginServices()
+        .require(ShopStatsCRUD.class)
+        .get()
+        .addPurchase(shopItem.getItemID());
     playerData.addPurchasedItem(shopItem, 1);
-    PlayerDataManager.getInstance().update(playerData);
+    playerDataManager.update(playerData);
     player.sendMessage(
         TextUtil.format(
             "&3Purchased " + shopItem.getDisplayName() + " &3for &f&l" + price + "&3 credits."));
-    Main.log(player.getName() + " purchased " + shopItem.getItemID() + " for " + price + " credits.");
+    Main.info(
+        player.getName() + " purchased " + shopItem.getItemID() + " for " + price + " credits.");
     new EcoBitsAccount(player).remove(BigDecimal.valueOf(price));
     Main.playAcceptSound(player);
   }

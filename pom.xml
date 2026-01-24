@@ -116,28 +116,10 @@
             <version>0.5.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>me.mortaldev</groupId>
-            <artifactId>MenuAPI</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>com.willfp</groupId>
             <artifactId>EcoBits</artifactId>
             <version>1.8.4</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>me.mortaldev</groupId>
-            <artifactId>AbstractYaml</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>me.mortaldev</groupId>
-            <artifactId>AbstractCRUD</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>net.luckperms</groupId>
@@ -155,6 +137,24 @@
             <artifactId>junit-jupiter</artifactId>
             <version>RELEASE</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.mortaldev</groupId>
+            <artifactId>MenuAPI</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.mortaldev</groupId>
+            <artifactId>AbstractCRUD</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.mortaldev</groupId>
+            <artifactId>AbstractYaml</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

@@ -2,30 +2,30 @@ package me.mortaldev.jbcreditshop.modules.transaction;
 
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.logging.Logger;
+
 import me.mortaldev.crudapi.CRUD;
 import me.mortaldev.crudapi.CRUDManager;
+import me.mortaldev.crudapi.loading.CRUDRegistry;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.transaction.data.Transaction;
 
 public class TransactionLogManager extends CRUDManager<TransactionLog> {
-  private static class Singleton {
-    private static final TransactionLogManager INSTANCE = new TransactionLogManager();
-  }
+  private final Logger logger;
 
-  public static synchronized TransactionLogManager getInstance() {
-    return Singleton.INSTANCE;
+  public TransactionLogManager(CRUD<TransactionLog> crud, CRUDRegistry registry, Logger logger) {
+    super(crud, registry);
+    this.logger = logger;
   }
-
-  private TransactionLogManager() {}
 
   @Override
-  public CRUD<TransactionLog> getCRUD() {
-    return TransactionLogCRUD.getInstance();
+  public TransactionLog getNewInstance(String string) {
+    return new TransactionLog(Main.getLocalDateTime(), new HashMap<>());
   }
 
   @Override
   public void log(String string) {
-    Main.log(string);
+    logger.info(string);
   }
 
   public TransactionLog getTodayLog() {

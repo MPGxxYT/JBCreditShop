@@ -48,8 +48,7 @@ public record TransactionLog(
   }
 
   @Override
-  @JsonIgnore
-  public String getID() {
+  public String getId() {
     return date.format(DateTimeFormatter.ISO_LOCAL_DATE);
   }
 }

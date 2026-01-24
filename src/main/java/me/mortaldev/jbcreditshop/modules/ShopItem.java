@@ -7,12 +7,13 @@ import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.records.Pair;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
+import me.mortaldev.jbcreditshop.yaml.core.YamlPersistable;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 
-public class ShopItem {
+public class ShopItem implements YamlPersistable {
   private Pair<FileConfiguration, String> source;
   private ConfigurationSection section;
   private String itemID = "";
@@ -37,18 +38,22 @@ public class ShopItem {
   private boolean archived = false;
   private boolean oneTimePurchase = false;
 
+  @Override
   public Pair<FileConfiguration, String> getSource() {
     return source;
   }
 
+  @Override
   public void setSource(Pair<FileConfiguration, String> source) {
     this.source = source;
   }
 
+  @Override
   public void setSection(ConfigurationSection section) {
     this.section = section;
   }
 
+  @Override
   public ConfigurationSection getSection() {
     return section;
   }

@@ -1,25 +1,16 @@
 package me.mortaldev.jbcreditshop.modules.shopstats;
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.util.HashMap;
 import me.mortaldev.crudapi.CRUDAdapters;
 import me.mortaldev.crudapi.SingleCRUD;
-import me.mortaldev.crudapi.handlers.Jackson;
-import me.mortaldev.jbcreditshop.Main;
+import me.mortaldev.crudapi.interfaces.Handler;
 
 public class ShopStatsCRUD extends SingleCRUD<ShopStats> {
-  private static final String PATH = Main.getInstance().getDataFolder() + "/plugin/";
+  private final String storagePath;
 
-  private static class Singleton {
-    private static final ShopStatsCRUD INSTANCE = new ShopStatsCRUD();
-  }
-
-  public static synchronized ShopStatsCRUD getInstance() {
-    return Singleton.INSTANCE;
-  }
-
-  private ShopStatsCRUD() {
-    super(Jackson.getInstance());
+  public ShopStatsCRUD(Handler handler, String storagePath) {
+    super(handler);
+    this.storagePath = storagePath;
   }
 
   @Override
@@ -29,14 +20,12 @@ public class ShopStatsCRUD extends SingleCRUD<ShopStats> {
 
   @Override
   public String getPath() {
-    return PATH;
+    return storagePath;
   }
 
   @Override
   public CRUDAdapters getCRUDAdapters() {
-    CRUDAdapters crudAdapters = new CRUDAdapters();
-    crudAdapters.addModule(new JavaTimeModule());
-    return crudAdapters;
+    return new CRUDAdapters();
   }
 
   @Override
@@ -45,7 +34,7 @@ public class ShopStatsCRUD extends SingleCRUD<ShopStats> {
   }
 
   @Override
-  public String getID() {
+  public String getId() {
     return "shopStats";
   }
 }

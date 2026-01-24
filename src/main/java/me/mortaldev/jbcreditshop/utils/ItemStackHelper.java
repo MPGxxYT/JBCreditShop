@@ -8,8 +8,144 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 public class ItemStackHelper {
+
+  public record NameHolder(String stringName, Component componentName) {
+    public boolean hasComponent() {
+      return componentName != null;
+    }
+
+    public Component asComponent() {
+      if (hasComponent()) {
+        return componentName;
+      } else {
+        return Component.text(stringName);
+      }
+    }
+
+    public String asString() {
+      if (hasComponent()) {
+        return TextUtil.deformat(componentName);
+      } else {
+        return stringName;
+      }
+    }
+  }
+
+  private static final Set<Character> VOWELS = Set.of('a', 'e', 'i', 'o', 'u');
+
+  /**
+   * Converts the given ItemStack into a grammatically correct item name string.
+   *
+   * @param itemStack The ItemStack to convert.
+   * @return The grammatically correct item name string.
+   */
+  public static String grammarItem(@NotNull ItemStack itemStack) {
+    String name = itemName(itemStack);
+    if (name.isEmpty()) {
+      return "an Item";
+    }
+
+    if (itemStack.getAmount() > 1) {
+      return itemStack.getAmount() + " " + pluralize(name);
+    }
+
+    String lowerName = name.toLowerCase();
+    char lastChar = lowerName.charAt(lowerName.length() - 1);
+
+    // Items ending in 's' don't need article modification
+    if (lastChar == 's') {
+      return name;
+    }
+
+    char firstChar = lowerName.charAt(0);
+    return (VOWELS.contains(firstChar) ? "an " : "a ") + name;
+  }
+
+  /**
+   * Converts a singular item name to its plural form.
+   *
+   * @param name The singular name to pluralize.
+   * @return The pluralized name.
+   */
+  private static String pluralize(@NotNull String name) {
+    String lowerName = name.toLowerCase();
+    char lastChar = lowerName.charAt(lowerName.length() - 1);
+
+    if (lastChar == 's'
+        || lastChar == 'x'
+        || lastChar == 'z'
+        || lowerName.endsWith("sh")
+        || lowerName.endsWith("ch")) {
+      return name + "es";
+    }
+    return name + "s";
+  }
+
+  /**
+   * Retrieves the name of an ItemStack, including both its formatted string name and its Component
+   * display name.
+   *
+   * @param item The ItemStack to retrieve the name from.
+   * @return A NameHolder record containing the string name and Component display name (if present).
+   */
+  public static NameHolder getName(@NotNull ItemStack item) {
+    if (item.hasItemMeta()) {
+      Component displayName = item.getItemMeta().displayName();
+      if (item.getItemMeta().hasDisplayName() && displayName != null) {
+        return new NameHolder(itemName(item), displayName);
+      } else {
+        return new NameHolder(itemName(item), null);
+      }
+    } else {
+      return new NameHolder(itemName(item), null);
+    }
+  }
+
+  /**
+   * Converts the given ItemStack into a formatted item name string.
+   *
+   * @param itemStack The ItemStack to convert.
+   * @return The formatted item name string.
+   */
+  public static String itemName(@NotNull ItemStack itemStack) {
+    String key = itemStack.getType().getKey().getKey();
+    String[] parts = key.split("_");
+
+    if (parts.length == 0) {
+      return "";
+    }
+
+    if (parts.length == 1) {
+      return capitalize(parts[0]);
+    }
+
+    StringBuilder result = new StringBuilder(key.length() + parts.length);
+    for (int i = 0; i < parts.length; i++) {
+      if (!parts[i].isEmpty()) {
+        if (i > 0) {
+          result.append(' ');
+        }
+        result.append(capitalize(parts[i]));
+      }
+    }
+    return result.toString();
+  }
+
+  /**
+   * Capitalizes the first character of a string.
+   *
+   * @param str The string to capitalize.
+   * @return The capitalized string.
+   */
+  private static String capitalize(@NotNull String str) {
+    if (str.isEmpty()) {
+      return str;
+    }
+    return Character.toUpperCase(str.charAt(0)) + str.substring(1);
+  }
 
   /**
    * Serializes an ItemStack object into a Base64 encoded string.
@@ -17,7 +153,7 @@ public class ItemStackHelper {
    * @param itemStack The ItemStack object to be serialized.
    * @return A Base64 encoded string representation of the serialized ItemStack object.
    */
-  public static String serialize(ItemStack itemStack) {
+  public static String serialize(@NotNull ItemStack itemStack) {
     byte[] itemStackAsBytes = itemStack.serializeAsBytes();
     return Base64.getEncoder().encodeToString(itemStackAsBytes);
   }
@@ -28,7 +164,7 @@ public class ItemStackHelper {
    * @param string The Base64 encoded string to be deserialized.
    * @return The deserialized ItemStack object.
    */
-  public static ItemStack deserialize(String string) {
+  public static ItemStack deserialize(@NotNull String string) {
     byte[] bytes = Base64.getDecoder().decode(string);
     return ItemStack.deserializeBytes(bytes);
   }
@@ -40,7 +176,7 @@ public class ItemStackHelper {
    * material}:{@code amount}:{@code itemMeta}".
    *
    * <p>If {@code asHover} is false, the returned string will be the result of calling {@link
-   * org.bukkit.inventory.ItemStack#getItemMeta()}{@code .getAsString()}.
+   * ItemStack#getItemMeta()}{@code .getAsString()}.
    *
    * <p>Usage in hover:
    *
@@ -50,21 +186,21 @@ public class ItemStackHelper {
    * @param asHover Whether to format the returned string for a Hover ShowItem Event.
    * @return The converted SNBT string.
    */
-  public static String toSNBT(ItemStack itemStack, boolean asHover) {
-    String string = "";
+  public static String toSNBT(@NotNull ItemStack itemStack, boolean asHover) {
+    StringBuilder sb = new StringBuilder();
     if (asHover) {
-      string += itemStack.getType().getKey().getKey();
-      string += ":" + itemStack.getAmount();
+      sb.append(itemStack.getType().getKey().getKey());
+      sb.append(":").append(itemStack.getAmount());
       if (itemStack.hasItemMeta()) {
         String meta = itemStack.getItemMeta().getAsString().replace("\"", "\\\"");
-        return string + (":\"" + meta + "\"");
+        sb.append(":\"").append(meta).append("\"");
       }
     } else {
       if (itemStack.hasItemMeta()) {
-        return itemStack.getItemMeta().getAsString();
+        sb.append(itemStack.getItemMeta().getAsString());
       }
     }
-    return string;
+    return sb.toString();
   }
 
   /**

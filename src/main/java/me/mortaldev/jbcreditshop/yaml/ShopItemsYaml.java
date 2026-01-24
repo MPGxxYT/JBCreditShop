@@ -1,33 +1,24 @@
 package me.mortaldev.jbcreditshop.yaml;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
+
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.modules.ShopItem;
 import me.mortaldev.jbcreditshop.modules.ShopManager;
-import me.mortaldev.jbcreditshop.records.Pair;
+import me.mortaldev.jbcreditshop.yaml.core.AbstractYamlCRUD;
+import me.mortaldev.jbcreditshop.yaml.core.YamlField;
+import me.mortaldev.jbcreditshop.yaml.core.YamlFieldType;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 
-// Removed @NotNull as it's not used directly in the refined code's public API in a way that adds
-// value over standard checks.
-
-public class ShopItemsYaml {
+public class ShopItemsYaml extends AbstractYamlCRUD<ShopItem, ShopItem.Builder> {
 
   private static final String PATH = "/shopitems/";
-  private static final String SHOP_ITEMS_FILE_NAME = "shopitems.yml"; // Consistent file naming
+  private static final String SHOP_ITEMS_FILE_NAME = "shopitems.yml";
 
-  // Singleton pattern
   private static class Singleton {
     private static final ShopItemsYaml INSTANCE = new ShopItemsYaml();
   }
@@ -36,442 +27,181 @@ public class ShopItemsYaml {
     return Singleton.INSTANCE;
   }
 
-  private ShopItemsYaml() {}
+  private final List<YamlField<ShopItem, ShopItem.Builder>> fields;
+  private final YamlField<ShopItem, ShopItem.Builder> shopSlotField;
 
-  private void missingValueMessage(String key, String configName, String itemID) {
-    Main.warn(
-        "Missing REQUIRED value for key '"
-            + key
-            + "' in config section '"
-            + configName
-            + "' (ItemID: "
-            + (itemID != null ? itemID : "Unknown")
-            + ")");
+  @SuppressWarnings("unchecked")
+  private ShopItemsYaml() {
+    super();
+    this.shopSlotField =
+        YamlField.<ShopItem, ShopItem.Builder>builder("shop_slot", YamlFieldType.INTEGER)
+            .getter(ShopItem::getShopSlot)
+            .setter((b, v) -> b.setShopSlot((Integer) v))
+            .build();
+    this.fields = buildFields();
   }
 
-  // Helper method to find the next available sequential numeric key.
-  private int findNextAvailableNumericKey(FileConfiguration config) {
-    int maxKey = -1; // Start at -1, so first key is 0
-    Set<String> keys = config.getValues(false).keySet();
-    if (keys.isEmpty()) {
-      return 0;
-    }
-    for (String key : keys) {
-      try {
-        int numericKey = Integer.parseInt(key);
-        if (numericKey > maxKey) {
-          maxKey = numericKey;
-        }
-      } catch (NumberFormatException e) {
-        // Ignore non-numeric keys for sequence generation
-      }
-    }
-    return maxKey + 1;
+  @SuppressWarnings("unchecked")
+  private List<YamlField<ShopItem, ShopItem.Builder>> buildFields() {
+    return List.of(
+        YamlField.<ShopItem, ShopItem.Builder>builder("item_id", YamlFieldType.STRING)
+            .required()
+            .getter(ShopItem::getItemID)
+            .setter((b, v) -> b.setItemID((String) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("shop_id", YamlFieldType.STRING)
+            .required()
+            .getter(ShopItem::getShopID)
+            .setter((b, v) -> b.setShopID((String) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder(
+                "use_display_itemstack", YamlFieldType.BOOLEAN)
+            .getter(ShopItem::isUseDisplayItemStack)
+            .setter((b, v) -> b.setUseDisplayItemStack((Boolean) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("display_itemstack", YamlFieldType.STRING)
+            .getter(ShopItem::getDisplayItemStackSerialized)
+            .setter((b, v) -> b.setDisplayItemStack((String) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("display_material", YamlFieldType.STRING)
+            .getter(ShopItem::getDisplayMaterialAsString)
+            .setter((b, v) -> b.setDisplayMaterial((String) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("display_name", YamlFieldType.STRING)
+            .getter(ShopItem::getDisplayName)
+            .setter((b, v) -> b.setDisplayName((String) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("description", YamlFieldType.STRING_LIST)
+            .getter(ShopItem::getDescription)
+            .setter((b, v) -> b.setDescription((List<String>) v))
+            .build(),
+        shopSlotField,
+        YamlField.<ShopItem, ShopItem.Builder>builder("group", YamlFieldType.STRING)
+            .getter(ShopItem::getGroup)
+            .setter((b, v) -> b.setGroup((String) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("permission", YamlFieldType.STRING)
+            .getter(ShopItem::getPermission)
+            .setter((b, v) -> b.setPermission((String) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("purchased_item", YamlFieldType.STRING)
+            .getter(ShopItem::getPurchasedItemSerialized)
+            .setter((b, v) -> b.setPurchasedItem((String) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("purchased_command", YamlFieldType.STRING)
+            .getter(ShopItem::getPurchasedCommand)
+            .setter((b, v) -> b.setPurchasedCommand((String) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("purchased_permission", YamlFieldType.STRING)
+            .getter(ShopItem::getPurchasedPermission)
+            .setter((b, v) -> b.setPurchasedPermission((String) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("one_time_purchase", YamlFieldType.BOOLEAN)
+            .getter(ShopItem::isOneTimePurchase)
+            .setter((b, v) -> b.setOneTimePurchase((Boolean) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("price", YamlFieldType.INTEGER)
+            .required()
+            .getter(ShopItem::getRawPrice)
+            .setter((b, v) -> b.setPrice((Integer) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("discount", YamlFieldType.INTEGER)
+            .getter(ShopItem::getDiscount)
+            .setter((b, v) -> b.setDiscount((Integer) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder(
+                "allow_discount_stacking", YamlFieldType.BOOLEAN)
+            .getter(ShopItem::isAllowDiscountStacking)
+            .setter((b, v) -> b.setAllowDiscountStacking((Boolean) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("locked", YamlFieldType.BOOLEAN)
+            .getter(ShopItem::isLocked)
+            .setter((b, v) -> b.setLocked((Boolean) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("locked_reason", YamlFieldType.STRING)
+            .getter(ShopItem::getLockedReason)
+            .setter((b, v) -> b.setLockedReason((String) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("visible", YamlFieldType.BOOLEAN)
+            .getter(ShopItem::isVisible)
+            .setter((b, v) -> b.setVisible((Boolean) v))
+            .build(),
+        YamlField.<ShopItem, ShopItem.Builder>builder("archived", YamlFieldType.BOOLEAN)
+            .getter(ShopItem::isArchived)
+            .setter((b, v) -> b.setArchived((Boolean) v))
+            .build());
   }
 
-  public void delete(ShopItem shopItem) {
-    if (shopItem.getSource() == null
-        || shopItem.getSource().first() == null
-        || shopItem.getSource().second() == null) {
-      Main.severe(
-          "ShopItem (ID: "
-              + (shopItem.getItemID() != null ? shopItem.getItemID() : "N/A")
-              + ") is missing source FileConfiguration or path. Cannot delete.");
-      return;
-    }
-    ConfigurationSection section = shopItem.getSection();
-    if (section == null) {
-      Main.severe(
-          "ShopItem (ID: "
-              + (shopItem.getItemID() != null ? shopItem.getItemID() : "N/A")
-              + ") has a null section. Cannot delete.");
-      return;
-    }
-
-    FileConfiguration config = shopItem.getSource().first();
-    String configPath = shopItem.getSource().second();
-    config.set(section.getCurrentPath(), null);
-    Main.getYAML().saveConfig(config, configPath);
+  @Override
+  protected String getPath() {
+    return PATH;
   }
 
-  public void create(ShopItem shopItem) {
-    String itemsFilePath = PATH + SHOP_ITEMS_FILE_NAME;
-    File file = new File(Main.getInstance().getDataFolder(), itemsFilePath);
-    if (!file.exists()) {
-      file.getParentFile().mkdirs();
-      try {
-        file.createNewFile();
-      } catch (IOException e) {
-        throw new RuntimeException(
-            "Failed to create shop items file: " + file.getAbsolutePath(), e);
-      }
-    }
-
-    FileConfiguration config = Main.getYAML().getConfig(itemsFilePath);
-    shopItem.setSource(new Pair<>(config, itemsFilePath));
-
-    String newSectionKey = String.valueOf(findNextAvailableNumericKey(config));
-    ConfigurationSection section = config.createSection(newSectionKey);
-    shopItem.setSection(section); // Assign the numerically keyed section to the item
-
-    save(shopItem);
+  @Override
+  protected String getDefaultFileName() {
+    return SHOP_ITEMS_FILE_NAME;
   }
 
-  public void save(ShopItem shopItem) {
-    if (shopItem.getSource() == null
-        || shopItem.getSource().first() == null
-        || shopItem.getSource().second() == null) {
-      Main.severe(
-          "ShopItem (ID: "
-              + (shopItem.getItemID() != null ? shopItem.getItemID() : "N/A")
-              + ") is missing source FileConfiguration or path. Cannot save.");
-      return;
-    }
-    if (shopItem.getSection() == null) {
-      Main.severe(
-          "ShopItem (ID: "
-              + (shopItem.getItemID() != null ? shopItem.getItemID() : "N/A")
-              + ") has a null section. Cannot save properly. It might need to be created first.");
-      return;
-    }
-
-    FileConfiguration config = shopItem.getSource().first();
-    String configPath = shopItem.getSource().second();
-
-    write(shopItem.getSection(), shopItem); // Write into the item's assigned section
-    Main.getYAML().saveConfig(config, configPath);
+  @Override
+  public List<YamlField<ShopItem, ShopItem.Builder>> getFields() {
+    return fields;
   }
 
-  public Set<ShopItem> read() {
-    Set<ShopItem> shopItems = new HashSet<>();
-    HashMap<FileConfiguration, String> configsMap = YamlReader.getInstance().getConfigs(PATH);
-
-    for (Map.Entry<FileConfiguration, String> entry : configsMap.entrySet()) {
-      FileConfiguration config = entry.getKey();
-      String filePath = entry.getValue();
-
-      if (!filePath.endsWith(SHOP_ITEMS_FILE_NAME)) {
-        // Main.log("Skipping non-standard shop item file for numeric key processing: " + filePath);
-        // continue; // Or handle differently if other files have different structures
-      }
-
-      for (String key : config.getValues(false).keySet()) {
-        ConfigurationSection section = config.getConfigurationSection(key);
-        if (section != null) {
-          ShopItem shopItem = toShopItem(section);
-          shopItem.setSource(new Pair<>(config, filePath));
-          shopItem.setSection(section); // The section (e.g., named "0", "1")
-          shopItems.add(shopItem);
-        }
-      }
-    }
-    Main.log("Loaded " + shopItems.size() + " shop items.");
-    return shopItems;
-  }
-
-  private void write(ConfigurationSection section, ShopItem shopItem) {
-    // Resolve the parent Shop to determine context-dependent defaults (e.g., shop_slot)
-    Optional<Shop> parentShopOpt = ShopManager.getInstance().getShop(shopItem.getShopID());
+  @Override
+  protected List<YamlField<ShopItem, ShopItem.Builder>> getFieldsForWrite(ShopItem entity) {
+    Optional<Shop> parentShopOpt = ShopManager.getInstance().getShop(entity.getShopID());
     if (parentShopOpt.isEmpty()) {
       Main.warn(
           "Parent shop with ID '"
-              + shopItem.getShopID()
+              + entity.getShopID()
               + "' not found for ShopItem '"
-              + shopItem.getItemID()
-              + "'. Using default Shop settings for format.");
+              + entity.getItemID()
+              + "'. Using default settings.");
     }
-    Shop parentShop = parentShopOpt.orElseGet(Shop::new); // Use a default shop if not found
+    Shop parentShop = parentShopOpt.orElseGet(Shop::new);
 
-    Map<String, Class<?>> defaultFormat =
-        getDefaultFormat(parentShop); // Get format based on actual/default parent shop
-    HashMap<String, Supplier<Boolean>> booleanSuppliers = getBooleanSuppliers(shopItem);
-    HashMap<String, Supplier<Integer>> integerSuppliers = getIntegerSuppliers(shopItem);
-    HashMap<String, Supplier<String>> stringSuppliers = getStringSuppliers(shopItem);
+    // Filter out shop_slot if shop style is not CUSTOM
+    if (parentShop.getStyle() != Shop.Style.CUSTOM) {
+      List<YamlField<ShopItem, ShopItem.Builder>> filtered = new ArrayList<>(fields);
+      filtered.remove(shopSlotField);
+      return filtered;
+    }
+    return fields;
+  }
 
-    for (Map.Entry<String, Class<?>> entry : defaultFormat.entrySet()) {
-      String formatKey = entry.getKey();
-      Class<?> clazz = entry.getValue();
-
-      try {
-        if (clazz == Boolean.class) {
-          if (booleanSuppliers.containsKey(formatKey)
-              && booleanSuppliers.get(formatKey).get() != null) {
-            section.set(formatKey, booleanSuppliers.get(formatKey).get());
-          }
-        } else if (clazz == Integer.class) {
-          if (integerSuppliers.containsKey(formatKey)
-              && integerSuppliers.get(formatKey).get() != null) {
-            section.set(formatKey, integerSuppliers.get(formatKey).get());
-          }
-        } else if (clazz == List.class) {
-          // Explicitly handle list types like 'description'
-          if (Objects.equals(formatKey, "description") && shopItem.getDescription() != null) {
-            section.set(formatKey, shopItem.getDescription());
-          }
-          // Add other list properties here if any
-        } else if (clazz == String.class) { // Explicitly String.class
-          if (stringSuppliers.containsKey(formatKey)
-              && stringSuppliers.get(formatKey).get() != null) {
-            section.set(formatKey, stringSuppliers.get(formatKey).get());
-          }
-        } else {
-          // Fallback for other types, though getDefaultFormat should ideally cover all.
-          // This was previously implicitly handling String, now String is explicit.
-          if (stringSuppliers.containsKey(formatKey)
-              && stringSuppliers.get(formatKey).get() != null) {
-            if (formatKey.isBlank() && stringSuppliers.get(formatKey).get().isBlank()) {
-              continue;
-            }
-            section.set(formatKey, stringSuppliers.get(formatKey).get());
-          }
-        }
-      } catch (NullPointerException e) {
-        Main.warn(
-            "Null value encountered from supplier for key '"
-                + formatKey
-                + "' in ShopItem '"
-                + shopItem.getItemID()
-                + "'. Skipping.");
+  @Override
+  protected List<YamlField<ShopItem, ShopItem.Builder>> getFieldsForRead(
+      ConfigurationSection section) {
+    String shopId = section.getString("shop_id");
+    if (shopId != null) {
+      Optional<Shop> parentShopOpt = ShopManager.getInstance().getShop(shopId);
+      if (parentShopOpt.isPresent() && parentShopOpt.get().getStyle() != Shop.Style.CUSTOM) {
+        // Filter out shop_slot for non-CUSTOM style shops
+        List<YamlField<ShopItem, ShopItem.Builder>> filtered = new ArrayList<>(fields);
+        filtered.remove(shopSlotField);
+        return filtered;
       }
     }
+    return fields;
   }
 
-  private Map<String, Class<?>> getDefaultFormat(Shop shop) { // Takes Shop context
-    Map<String, Class<?>> defaultMap =
-        new HashMap<>() {
-          {
-            put("item_id", String.class);
-            put("shop_id", String.class);
-            put("use_display_itemstack", Boolean.class);
-            put("display_itemstack", String.class); // Serialized ItemStack
-            put("display_material", String.class);
-            put("display_name", String.class);
-            put("description", List.class);
-            put("shop_slot", Integer.class); // Conditionally removed below
-            put("group", String.class);
-            put("permission", String.class);
-            put("purchased_item", String.class); // Serialized ItemStack
-            put("purchased_command", String.class);
-            put("purchased_permission", String.class);
-            put("one_time_purchase", Boolean.class);
-            put("price", Integer.class);
-            put("discount", Integer.class);
-            put("allow_discount_stacking", Boolean.class);
-            put("locked", Boolean.class);
-            put("locked_reason", String.class);
-            put("visible", Boolean.class);
-            put("archived", Boolean.class);
-          }
-        };
-    // If shop style is not custom, shop_slot might not be relevant.
-    if (shop != null && shop.getStyle() != Shop.Style.CUSTOM) {
-      defaultMap.remove("shop_slot");
-    }
-    return defaultMap;
+  @Override
+  public Supplier<ShopItem.Builder> builderSupplier() {
+    return ShopItem::builder;
   }
 
-  private HashMap<String, Supplier<String>> getStringSuppliers(ShopItem shopItem) {
-    return new HashMap<>() {
-      {
-        put("item_id", shopItem::getItemID);
-        put("shop_id", shopItem::getShopID);
-        put("display_material", shopItem::getDisplayMaterialAsString);
-        put("display_name", shopItem::getDisplayName);
-        put("group", shopItem::getGroup);
-        put("permission", shopItem::getPermission);
-        put("purchased_item", shopItem::getPurchasedItemSerialized);
-        put("display_itemstack", shopItem::getDisplayItemStackSerialized);
-        put("purchased_command", shopItem::getPurchasedCommand);
-        put("purchased_permission", shopItem::getPurchasedPermission);
-        put("locked_reason", shopItem::getLockedReason);
-      }
-    };
+  @Override
+  public ShopItem build(ShopItem.Builder builder) {
+    return builder.build();
   }
 
-  private HashMap<String, Supplier<Integer>> getIntegerSuppliers(ShopItem shopItem) {
-    return new HashMap<>() {
-      {
-        put("shop_slot", shopItem::getShopSlot);
-        put("price", shopItem::getRawPrice);
-        put("discount", shopItem::getDiscount);
-      }
-    };
+  @Override
+  public String getEntityName() {
+    return "shop item";
   }
 
-  private HashMap<String, Supplier<Boolean>> getBooleanSuppliers(ShopItem shopItem) {
-    return new HashMap<>() {
-      {
-        put("locked", shopItem::isLocked);
-        put("visible", shopItem::isVisible);
-        put("archived", shopItem::isArchived);
-        put("one_time_purchase", shopItem::isOneTimePurchase);
-        put("allow_discount_stacking", shopItem::isAllowDiscountStacking);
-        put("use_display_itemstack", shopItem::isUseDisplayItemStack);
-      }
-    };
-  }
-
-  // Consumer maps for populating ShopItem.Builder from ConfigurationSection
-  private static HashMap<String, Consumer<Boolean>> getBooleanConsumers(
-      ShopItem.Builder shopItemBuilder) {
-    return new HashMap<>() {
-      {
-        put("locked", shopItemBuilder::setLocked);
-        put("visible", shopItemBuilder::setVisible);
-        put("archived", shopItemBuilder::setArchived);
-        put("one_time_purchase", shopItemBuilder::setOneTimePurchase);
-        put("allow_discount_stacking", shopItemBuilder::setAllowDiscountStacking);
-        put("use_display_itemstack", shopItemBuilder::setUseDisplayItemStack);
-      }
-    };
-  }
-
-  private ShopItem.Builder getBooleanValues(
-      ConfigurationSection config, ShopItem.Builder shopItemBuilder) {
-    Map<String, Boolean> keysToParse = // field_name, is_required
-        new HashMap<>() {
-          {
-            put("locked", false);
-            put("visible", false); // Default to true in builder if not present?
-            put("archived", false);
-            put("one_time_purchase", false);
-            put("allow_discount_stacking", false);
-            put("use_display_itemstack", false);
-          }
-        };
-    Map<String, Consumer<Boolean>> consumers = getBooleanConsumers(shopItemBuilder);
-
-    for (Map.Entry<String, Boolean> entry : keysToParse.entrySet()) {
-      String key = entry.getKey();
-      boolean isRequired = entry.getValue();
-      if (config.contains(key)) {
-        consumers.get(key).accept(config.getBoolean(key));
-      } else if (isRequired) {
-        missingValueMessage(key, config.getName(), config.getString("item_id"));
-      }
-    }
-    return shopItemBuilder;
-  }
-
-  private ShopItem.Builder getDigitValues(
-      ConfigurationSection config, ShopItem.Builder shopItemBuilder) {
-    Map<String, Boolean> keysToParse = // field_name, is_required
-        new HashMap<>() {
-          {
-            put("shop_slot", false);
-            put("price", true);
-            put("discount", false); // Changed from true, assuming discount can be optional (0)
-          }
-        };
-    Map<String, Consumer<Integer>> consumers =
-        new HashMap<>() {
-          {
-            put("shop_slot", shopItemBuilder::setShopSlot);
-            put("price", shopItemBuilder::setPrice);
-            put("discount", shopItemBuilder::setDiscount);
-          }
-        };
-
-    for (Map.Entry<String, Boolean> entry : keysToParse.entrySet()) {
-      String key = entry.getKey();
-      boolean isRequired = entry.getValue();
-
-      if (config.contains(key)) {
-        // Contextual check for shop_slot based on parent shop's style
-        if (key.equals("shop_slot")) {
-          String shopId = config.getString("shop_id");
-          if (shopId != null) {
-            Optional<Shop> parentShopOpt = ShopManager.getInstance().getShop(shopId);
-            if (parentShopOpt.isPresent() && parentShopOpt.get().getStyle() != Shop.Style.CUSTOM) {
-              continue; // Skip setting shop_slot if shop style is not CUSTOM
-            }
-          }
-        }
-        consumers.get(key).accept(config.getInt(key));
-      } else if (isRequired) {
-        missingValueMessage(key, config.getName(), config.getString("item_id"));
-      }
-    }
-    return shopItemBuilder;
-  }
-
-  private ShopItem.Builder getSingleStringValues(
-      ConfigurationSection config, ShopItem.Builder shopItemBuilder) {
-    Map<String, Boolean> keysToParse = // field_name, is_required
-        new HashMap<>() {
-          {
-            put("item_id", true);
-            put("shop_id", true);
-            put("display_material", false); // Often has a default like STONE
-            put("display_name", false);
-            put("group", false);
-            put("permission", false);
-            put("display_itemstack", false); // Can be null if it's a command item
-            put("purchased_item", false); // Can be null if it's a command item
-            put("purchased_command", false); // Can be null if it's an item giving item
-            put("purchased_permission", false);
-            put("locked_reason", false);
-          }
-        };
-    Map<String, Consumer<String>> consumers =
-        new HashMap<>() {
-          {
-            put("item_id", shopItemBuilder::setItemID);
-            put("shop_id", shopItemBuilder::setShopID);
-            put("display_material", shopItemBuilder::setDisplayMaterial);
-            put("display_name", shopItemBuilder::setDisplayName);
-            put("group", shopItemBuilder::setGroup);
-            put("permission", shopItemBuilder::setPermission);
-            put("display_itemstack", shopItemBuilder::setDisplayItemStack);
-            put("purchased_item", shopItemBuilder::setPurchasedItem);
-            put("purchased_command", shopItemBuilder::setPurchasedCommand);
-            put("purchased_permission", shopItemBuilder::setPurchasedPermission);
-            put("locked_reason", shopItemBuilder::setLockedReason);
-          }
-        };
-
-    for (Map.Entry<String, Boolean> entry : keysToParse.entrySet()) {
-      String key = entry.getKey();
-      boolean isRequired = entry.getValue();
-      String value = config.getString(key);
-
-      if (value == null
-          || (isRequired && value.isBlank())) { // More precise check for required blank values
-        if (isRequired) {
-          missingValueMessage(key, config.getName(), config.getString("item_id"));
-          // Consider if to `return shopItemBuilder;` here to stop processing a critically flawed
-          // item
-        }
-        // For optional fields, if value is null/blank, we might skip or let builder handle defaults
-        if (value == null || value.isBlank()) {
-          continue;
-        }
-      }
-      consumers.get(key).accept(value);
-    }
-    return shopItemBuilder;
-  }
-
-  private ShopItem toShopItem(ConfigurationSection config) {
-    ShopItem.Builder shopItemBuilder = ShopItem.builder();
-
-    // Populate builder using helper methods
-    getSingleStringValues(config, shopItemBuilder);
-    getBooleanValues(config, shopItemBuilder);
-    getDigitValues(config, shopItemBuilder);
-
-    // Handle list types like description
-    if (config.isList("description")) {
-      List<String> description = config.getStringList("description");
-      if (!description.isEmpty()) { // Avoid setting an empty list if not intended
-        shopItemBuilder.setDescription(description);
-      }
-    } else if (config.contains("description")) { // Handle if it's a single string (forgiving parse)
-      String singleLineDescription = config.getString("description");
-      if (singleLineDescription != null && !singleLineDescription.isBlank()) {
-        shopItemBuilder.setDescription(List.of(singleLineDescription));
-      }
-    }
-    return shopItemBuilder.build();
+  @Override
+  public String getIdentifier(ShopItem entity) {
+    return entity.getItemID() != null ? entity.getItemID() : "N/A";
   }
 }

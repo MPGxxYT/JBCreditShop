@@ -6,7 +6,6 @@ import co.aikar.commands.annotation.*;
 import java.util.Optional;
 import me.mortaldev.jbcreditshop.Main;
 import me.mortaldev.jbcreditshop.menus.shop.ShopsMenu;
-import me.mortaldev.jbcreditshop.modules.MenuData;
 import me.mortaldev.jbcreditshop.modules.Shop;
 import me.mortaldev.jbcreditshop.modules.ShopItemsManager;
 import me.mortaldev.jbcreditshop.modules.ShopManager;

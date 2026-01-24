@@ -3,7 +3,6 @@ package me.mortaldev.jbcreditshop.commands;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import me.mortaldev.jbcreditshop.menus.bundle.BundleMenu;
-import me.mortaldev.jbcreditshop.modules.MenuData;
 import me.mortaldev.jbcreditshop.modules.bundles.Bundle;
 import me.mortaldev.jbcreditshop.modules.bundles.BundleManager;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
@@ -18,6 +17,12 @@ import java.util.Optional;
 
 @CommandAlias("bundle")
 public class BundleCommand extends BaseCommand {
+  
+  private final BundleManager bundleManager;
+
+  public BundleCommand(BundleManager bundleManager) {
+    this.bundleManager = bundleManager;
+  }
 
   @Default
   @CommandPermission("jbcreditshop.admin||jbcreditshop.bundle")
@@ -40,7 +45,7 @@ public class BundleCommand extends BaseCommand {
   @CommandCompletion("@bundles @players")
   @Syntax("<bundle> <player>")
   public void giveBundle(CommandSender sender, String bundleString, String playerString) {
-    Optional<Bundle> bundleOptional = BundleManager.getInstance().getByID(bundleString);
+    Optional<Bundle> bundleOptional = bundleManager.getByID(bundleString);
     if (bundleOptional.isEmpty()) {
       sendMessage(sender, "&cThat bundle does not exist!");
       return;
@@ -55,7 +60,7 @@ public class BundleCommand extends BaseCommand {
       return;
     }
     Bundle bundle = bundleOptional.get();
-    ItemStack bundleItem = BundleManager.getInstance().getBundleItemStack(bundle);
+    ItemStack bundleItem = bundleManager.getBundleItemStack(bundle);
     if (!Utils.canInventoryHold(recievingPlayer.getInventory(), bundleItem)) {
       sendMessage(sender, "&cThat player has no space for this bundle.");
       return;

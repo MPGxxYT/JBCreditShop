@@ -2,7 +2,7 @@ package me.mortaldev.jbcreditshop.modules.bundles;
 
 import me.mortaldev.crudapi.CRUD;
 import me.mortaldev.crudapi.CRUDManager;
-import me.mortaldev.jbcreditshop.Main;
+import me.mortaldev.crudapi.loading.CRUDRegistry;
 import me.mortaldev.jbcreditshop.utils.ItemStackHelper;
 import me.mortaldev.jbcreditshop.utils.NBTAPI;
 import me.mortaldev.jbcreditshop.utils.TextUtil;
@@ -13,25 +13,24 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.util.logging.Logger;
+
 public class BundleManager extends CRUDManager<Bundle> {
-  private static class Singleton {
-    private static final BundleManager INSTANCE = new BundleManager();
-  }
+  private final Logger logger;
 
-  public static synchronized BundleManager getInstance() {
-    return Singleton.INSTANCE;
+  public BundleManager(CRUD<Bundle> crud, CRUDRegistry registry, Logger logger) {
+    super(crud, registry);
+    this.logger = logger;
   }
-
-  private BundleManager() {}
 
   @Override
-  public CRUD<Bundle> getCRUD() {
-    return BundleCRUD.getInstance();
+  public Bundle getNewInstance(String string) {
+    return Bundle.create(string);
   }
 
   @Override
   public void log(String string) {
-    Main.log(string);
+    logger.info(string);
   }
 
   public boolean giveBundleItems(Player player, Bundle bundle) {

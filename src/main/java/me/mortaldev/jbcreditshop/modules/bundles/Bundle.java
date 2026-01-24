@@ -58,8 +58,13 @@ public class Bundle implements CRUD.Identifiable {
     return items.contains(itemStack);
   }
 
-  @Override
+  @Deprecated
   public String getID() {
+    return ID;
+  }
+
+  @Override
+  public String getId() {
     return ID;
   }
 }
